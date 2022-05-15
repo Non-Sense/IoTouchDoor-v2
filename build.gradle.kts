@@ -42,6 +42,15 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-jackson:1.6.8")
     implementation("io.ktor:ktor-client-jackson:$ktor_version")
+
+    implementation("com.pi4j:pi4j-core:2.1.1")
+    implementation("com.pi4j:pi4j-plugin-raspberrypi:2.1.1")
+    implementation("com.pi4j:pi4j-plugin-pigpio:2.1.1")
+
+    implementation("org.usb4java","usb4java","1.3.0")
+    implementation("org.usb4java","usb4java-javax","1.3.0")
+    implementation("com.igormaznitsa","jbbp","1.4.1")
+
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
