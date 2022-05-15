@@ -24,7 +24,7 @@ fun Application.configureRouting() {
         route("/api") {
             route("/user") {
                 post("/register") {
-                    postUser()
+                    registerUser()
                 }
 
                 post("/auth") {
@@ -54,7 +54,7 @@ private suspend inline fun <reified T : Any> PipelineContext<Unit, ApplicationCa
     }.getOrNull()
 }
 
-private suspend fun PipelineContext<Unit, ApplicationCall>.postUser() {
+private suspend fun PipelineContext<Unit, ApplicationCall>.registerUser() {
     val post = getPostData<RegisterUser>() ?: return
     if (UserService.get(post.id) != null) {
         call.respond(HttpStatusCode.Conflict)

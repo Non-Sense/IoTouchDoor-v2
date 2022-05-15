@@ -1,32 +1,45 @@
 package com.n0n5ense.model
 
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 
-object UserTable : Table("user") {
-    val id = varchar("id", 32).primaryKey()
-    val name = varchar("name", 32)
-    val password = varchar("password", 60)
+object UserTable: IdTable<String>("user") {
+    override val id = varchar("id", 64).uniqueIndex().entityId()
+    override val primaryKey = PrimaryKey(id)
+    val name = text("name")
+    val password = char("password", 60)
     val enabled = bool("enabled").default(true)
+    val role = text("role").default(UserRole.None.name)
+}
+
+enum class UserRole {
+    None,
+    User,
+    Moderator,
+    Admin,
 }
 
 @Serializable
 data class RegisterUser(
     val id: String,
     val name: String,
-    val password: String
+    val password: String,
+    val role: UserRole = UserRole.None,
 )
 
 @Serializable
 data class LoginUser(
     val id: String,
-    val password: String
+    val password: String,
 )
 
-@Serializable
-data class User(
-    val id: String,
-    val name: String,
-    val password: String,
-    val enabled: Boolean
-)
+class User(id: EntityID<String>): Entity<String>(id) {
+    companion object: EntityClass<String, User>(UserTable)
+    var name by UserTable.name
+    var password by UserTable.password
+    var enabled by UserTable.enabled
+    var role by UserTable.role
+}
