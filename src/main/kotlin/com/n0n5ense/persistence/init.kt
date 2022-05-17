@@ -4,4 +4,5 @@ fun databaseInit() {
     UserService.init()
     TouchCardService.init()
     TouchLogService.init()
+    PhysicalLogService.init()
 }

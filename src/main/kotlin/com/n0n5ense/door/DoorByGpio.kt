@@ -1,7 +1,10 @@
 package com.n0n5ense.door
 
 import com.pi4j.Pi4J
-import com.pi4j.io.gpio.digital.*
+import com.pi4j.io.gpio.digital.DigitalInputProvider
+import com.pi4j.io.gpio.digital.DigitalOutputProvider
+import com.pi4j.io.gpio.digital.DigitalState
+import com.pi4j.io.gpio.digital.DigitalStateChangeListener
 import com.pi4j.io.pwm.Pwm
 import com.pi4j.io.pwm.PwmType
 import io.ktor.server.config.*
@@ -45,18 +48,18 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     }
 
     private val onDoorLockStateChange = DigitalStateChangeListener { event ->
-        when(event?.state()){
+        when(event?.state()) {
             DigitalState.LOW -> lockIndicator.state(DigitalState.HIGH)
             DigitalState.HIGH -> lockIndicator.state(DigitalState.LOW)
-            else -> { }
+            else -> {}
         }
     }
 
     private val onDoorOpenStateChange = DigitalStateChangeListener { event ->
-        when(event?.state()){
+        when(event?.state()) {
             DigitalState.LOW -> openIndicator.state(DigitalState.HIGH)
             DigitalState.HIGH -> openIndicator.state(DigitalState.LOW)
-            else -> { }
+            else -> {}
         }
     }
 
@@ -68,7 +71,7 @@ class DoorByGpio(config: ApplicationConfig): Door() {
 
     private var job: Job? = null
 
-    private fun cancelJob(){
+    private fun cancelJob() {
         job?.cancel()
         job = null
     }
@@ -85,13 +88,15 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     }
 
     override fun lock() {
-        cancelJob()
-        job = moveServo(servoLockPosition)
+        if(getStatus()?.isClose == true) {
+            cancelJob()
+            job = moveServo(servoLockPosition)
+        }
     }
 
     override fun getStatus(): DoorStatus? {
-        val isLock = servoSensor.state()?: return null
-        val isClose = doorSensor.state()?: return null
+        val isLock = servoSensor.state() ?: return null
+        val isClose = doorSensor.state() ?: return null
         if(isLock == DigitalState.UNKNOWN || isClose == DigitalState.UNKNOWN)
             return null
         return DoorStatus(

@@ -2,8 +2,8 @@ package com.n0n5ense
 
 import com.n0n5ense.door.Door
 import com.n0n5ense.door.DoorByGpio
+import com.n0n5ense.door.DoorService
 import com.n0n5ense.felica.FelicaHandler
-import com.n0n5ense.model.PhysicalLogAction
 import com.n0n5ense.persistence.PhysicalLogService
 import com.n0n5ense.persistence.databaseInit
 import io.ktor.server.engine.*
@@ -16,7 +16,6 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 
-private lateinit var door: Door
 private lateinit var felicaHandler: FelicaHandler
 
 fun Application.module() {
@@ -40,14 +39,11 @@ private fun init(environment: ApplicationEnvironment){
     Database.connect(environment.config.property("database.path").getString(), "org.sqlite.JDBC")
     databaseInit()
 
-    door = DoorByGpio(environment.config)
-    door.onClose = { PhysicalLogService.add(PhysicalLogAction.Close) }
-    door.onOpen = { PhysicalLogService.add(PhysicalLogAction.Open) }
-    door.onUnlock = { PhysicalLogService.add(PhysicalLogAction.Unlock) }
-    door.onLock = { PhysicalLogService.add(PhysicalLogAction.Lock) }
+    DoorService.init(DoorByGpio(environment.config))
+    DoorService.onActionCallback = { PhysicalLogService.add(it) }
 
     felicaHandler = FelicaHandler()
-    felicaHandler.onAccepted = { door.unlock() }
+    felicaHandler.onAccepted = { DoorService.unlock() }
     felicaHandler.onError = {
         environment.log.error(it.stackTraceToString())
         felicaHandler.init()
