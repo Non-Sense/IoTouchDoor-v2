@@ -4,6 +4,15 @@ import com.pi4j.Pi4J
 import com.pi4j.io.gpio.digital.*
 import com.pi4j.io.pwm.Pwm
 import com.pi4j.io.pwm.PwmType
+import com.pi4j.plugin.mock.platform.MockPlatform
+import com.pi4j.plugin.mock.provider.gpio.analog.MockAnalogInputProvider
+import com.pi4j.plugin.mock.provider.gpio.analog.MockAnalogOutputProvider
+import com.pi4j.plugin.mock.provider.gpio.digital.MockDigitalInputProvider
+import com.pi4j.plugin.mock.provider.gpio.digital.MockDigitalOutputProvider
+import com.pi4j.plugin.mock.provider.i2c.MockI2CProvider
+import com.pi4j.plugin.mock.provider.pwm.MockPwmProvider
+import com.pi4j.plugin.mock.provider.serial.MockSerialProvider
+import com.pi4j.plugin.mock.provider.spi.MockSpiProvider
 import com.pi4j.plugin.pigpio.provider.gpio.digital.PiGpioDigitalInputProvider
 import com.pi4j.plugin.pigpio.provider.gpio.digital.PiGpioDigitalOutputProvider
 import io.ktor.server.config.*
@@ -23,7 +32,24 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     private val servoUnlockPosition = config.property("gpio.servoUnlockPosition").getString().toFloat()
     private val servoWaitTime = config.property("gpio.servoMoveWaitTimeMilli").getString().toInt()
 
-    private val pi4jContext = Pi4J.newAutoContext()
+    private val isMock = config.property("gpio.mock").getString().toBoolean()
+
+    private val mockContext by lazy {
+        Pi4J.newContextBuilder()
+            .add(MockPlatform())
+            .add(
+                MockAnalogInputProvider.newInstance(),
+                MockAnalogOutputProvider.newInstance(),
+                MockSpiProvider.newInstance(),
+                MockPwmProvider.newInstance(),
+                MockSerialProvider.newInstance(),
+                MockI2CProvider.newInstance(),
+                MockDigitalInputProvider.newInstance(),
+                MockDigitalOutputProvider.newInstance())
+            .build()
+    }
+
+    private val pi4jContext = if(isMock) mockContext else Pi4J.newAutoContext()
     private val pwm: Pwm = pi4jContext.create(
         Pwm.newConfigBuilder(pi4jContext)
             .id("BCM$servoPort")
@@ -32,7 +58,6 @@ class DoorByGpio(config: ApplicationConfig): Door() {
             .pwmType(PwmType.HARDWARE)
             .initial(0)
             .shutdown(0)
-            .provider("pigpio-pwm")
             .frequency(50)
             .build()
     )
@@ -40,31 +65,26 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     private val openIndicator = pi4jContext.create(
         DigitalOutputConfigBuilder.newInstance(pi4jContext)
             .address(doorOpenIndicatorPort)
-            .provider(PiGpioDigitalOutputProvider.ID)
     ).apply { config().shutdownState(DigitalState.LOW) }
 
     private val lockIndicator = pi4jContext.create(
         DigitalOutputConfigBuilder.newInstance(pi4jContext)
             .address(doorLockIndicatorPort)
-            .provider(PiGpioDigitalOutputProvider.ID)
     ).apply { config().shutdownState(DigitalState.LOW) }
 
     private val servoSensor = pi4jContext.create(
         DigitalInputConfigBuilder.newInstance(pi4jContext)
             .address(servoSensorPort)
-            .provider(PiGpioDigitalInputProvider.ID)
     )
 
     private val doorSensor = pi4jContext.create(
         DigitalInputConfigBuilder.newInstance(pi4jContext)
             .address(doorSensorPort)
-            .provider(PiGpioDigitalInputProvider.ID)
     )
 
     private val unlockSwitch = pi4jContext.create(
         DigitalInputConfigBuilder.newInstance(pi4jContext)
             .address(unlockSwitchPort)
-            .provider(PiGpioDigitalInputProvider.ID)
     )
 
     private val onDoorLockStateChange = DigitalStateChangeListener { event ->

@@ -22,11 +22,6 @@ val Welcome = FC<WelcomeProps> { props ->
             color = rgb(56, 246, 137)
         }
         +"Hello, $name"
-        ConstraintLayout {
-            height = "50px"
-            width = "50px"
-
-        }
     }
 
     input {

@@ -2,6 +2,7 @@ package com.n0n5ense.plugins
 
 import com.n0n5ense.door.DoorService
 import com.n0n5ense.getPostData
+import com.n0n5ense.index
 import com.n0n5ense.isAdminRole
 import com.n0n5ense.model.*
 import com.n0n5ense.persistence.PhysicalLogService
@@ -11,13 +12,24 @@ import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.html.*
+import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.util.pipeline.*
+import kotlinx.html.HTML
 
 
 fun Application.configureRouting() {
 
     routing {
+
+        get("/") {
+            call.respondHtml(HttpStatusCode.OK, HTML::index)
+        }
+        static("/static") {
+            resources()
+        }
+
         route("/api") {
 
             get() {

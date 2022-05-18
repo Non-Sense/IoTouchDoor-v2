@@ -110,8 +110,9 @@ public class RCS380 {
 
     public UsbDevice findDevice(UsbHub hub, int vendorId, int productId) {
         for (Object obj : hub.getAttachedUsbDevices()) {
-            if (!(obj instanceof UsbDevice device))
+            if (!(obj instanceof UsbDevice))
                 continue;
+            UsbDevice device = (UsbDevice)obj;
             UsbDeviceDescriptor desc = device.getUsbDeviceDescriptor();
 
             if (desc.idVendor() == vendorId && desc.idProduct() == productId) return device;
