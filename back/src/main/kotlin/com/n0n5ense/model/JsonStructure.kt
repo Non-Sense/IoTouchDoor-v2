@@ -1,11 +1,11 @@
 package com.n0n5ense.model
 
 import kotlinx.serialization.Serializable
-import java.time.LocalDateTime
 
 @Serializable
 data class DoorLockAction(
-    val action: String
+    val action: String,
+    val force: Boolean? = null
 )
 
 @Serializable
@@ -29,5 +29,13 @@ data class DoorStatus(
 data class DoorLog(
     val id: Long,
     val action: String,
+    val time: String
+)
+
+@Serializable
+data class CardTouchLog(
+    val id: Int,
+    val cardId: String,
+    val accept: Boolean,
     val time: String
 )

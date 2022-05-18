@@ -1,6 +1,5 @@
 package com.n0n5ense
 
-import com.n0n5ense.door.Door
 import com.n0n5ense.door.DoorByGpio
 import com.n0n5ense.door.DoorService
 import com.n0n5ense.felica.FelicaHandler

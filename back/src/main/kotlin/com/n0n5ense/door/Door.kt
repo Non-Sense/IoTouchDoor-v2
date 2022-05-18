@@ -23,7 +23,7 @@ abstract class Door {
     var onOpen: (() -> Unit)? = null
 
     abstract fun unlock()
-    abstract fun lock()
+    abstract fun lock(force: Boolean = false)
     abstract fun getStatus(): DoorStatus?
 
     private var job: Job? = null

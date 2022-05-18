@@ -1,16 +1,17 @@
 package com.n0n5ense.plugins
 
 import com.n0n5ense.door.DoorService
+import com.n0n5ense.getPostData
+import com.n0n5ense.isAdminRole
 import com.n0n5ense.model.*
 import com.n0n5ense.persistence.PhysicalLogService
+import com.n0n5ense.persistence.TouchLogService
 import com.n0n5ense.persistence.UserService
 import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
-import io.ktor.server.request.*
 import io.ktor.util.pipeline.*
 
 
@@ -25,8 +26,8 @@ fun Application.configureRouting() {
 
 
             route("/user") {
-                post("/register") {
-                    registerUser()
+                post<RegisterUser>("/register") {
+                    registerUser(it)
                 }
 
                 post("/auth") {
@@ -50,9 +51,20 @@ fun Application.configureRouting() {
                     get {
                         doorStatus()
                     }
-
                     get("/log") {
+                        doorLog()
+                    }
+                }
 
+                route("/card") {
+                    post {
+
+                    }
+                    get {
+
+                    }
+                    get("/log") {
+                        cardLog()
                     }
                 }
 
@@ -62,28 +74,14 @@ fun Application.configureRouting() {
     }
 }
 
-private suspend inline fun <reified T : Any> PipelineContext<Unit, ApplicationCall>.getPostData(): T? {
-    return kotlin.runCatching {
-        call.receive<T>()
-    }.onFailure {
-        call.respond(HttpStatusCode.BadRequest)
-    }.getOrNull()
-}
 
-private fun PipelineContext<Unit, ApplicationCall>.isAdminRole(): Boolean {
-    return kotlin.runCatching {
-        val id = call.principal<JWTPrincipal>()!!.payload.claims["id"]!!.asString()
-        UserService.isAdminRole(id)
-    }.getOrElse { false }
-}
-
-private suspend fun PipelineContext<Unit, ApplicationCall>.registerUser() {
-    val post = getPostData<RegisterUser>() ?: return
-    if (UserService.get(post.id) != null) {
+private suspend fun PipelineContext<Unit, ApplicationCall>.registerUser(user: RegisterUser) {
+//    val post = getPostData<RegisterUser>() ?: return
+    if (UserService.get(user.id) != null) {
         call.respond(HttpStatusCode.Conflict)
         return
     }
-    UserService.create(post)
+    UserService.create(user)
     call.respond(HttpStatusCode.OK)
 }
 
@@ -109,8 +107,15 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.getAccessToken() {
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorLock() {
     val action = getPostData<DoorLockAction>() ?: return
+    val force = action.force?.let {
+        if(!isAdminRole()){
+            call.respond(HttpStatusCode.Forbidden)
+            return
+        }
+        it
+    }?:false
     when(action.action.lowercase()){
-        "lock" -> DoorService.lock()
+        "lock" -> DoorService.lock(force)
         "unlock" -> DoorService.unlock()
         else -> {
             call.respond(HttpStatusCode.BadRequest)
@@ -127,7 +132,15 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.doorStatus() {
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorLog() {
     val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it<=500 }?:50
     val p = call.parameters["p"]?.toIntOrNull()?:0
+    val result = PhysicalLogService.get(p, w)
+        .map { DoorLog(it.id.value, it.action, it.time.toString()) }
+    call.respond(HttpStatusCode.OK, result)
+}
 
-    PhysicalLogService.get(p, w)
-    call.respond(HttpStatusCode.OK, DoorStatus.from(DoorService.status()))
+private suspend fun PipelineContext<Unit, ApplicationCall>.cardLog() {
+    val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it<=500 }?:50
+    val p = call.parameters["p"]?.toIntOrNull()?:0
+    val result = TouchLogService.get(p, w)
+        .map { CardTouchLog(it.id.value, it.cardId, it.accept, it.time.toString()) }
+    call.respond(HttpStatusCode.OK, result)
 }
