@@ -87,8 +87,8 @@ class DoorByGpio(config: ApplicationConfig): Door() {
         job = moveServo(servoUnlockPosition)
     }
 
-    override fun lock() {
-        if(getStatus()?.isClose == true) {
+    override fun lock(force: Boolean) {
+        if(getStatus()?.isClose == true || force) {
             cancelJob()
             job = moveServo(servoLockPosition)
         }
