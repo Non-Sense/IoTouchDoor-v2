@@ -9,4 +9,7 @@
     </root>
     <logger name="org.eclipse.jetty" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
+    <logger name="com.pi4j" level="ERROR"/>
+<!--    <logger name="c.p.l.pigpio" level="ERROR"/>-->
+<!--    <logger name="c.p.p.impl" level="ERROR"/>-->
 </configuration>

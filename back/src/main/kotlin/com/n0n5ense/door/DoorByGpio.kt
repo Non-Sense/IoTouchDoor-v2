@@ -1,12 +1,11 @@
 package com.n0n5ense.door
 
 import com.pi4j.Pi4J
-import com.pi4j.io.gpio.digital.DigitalInputProvider
-import com.pi4j.io.gpio.digital.DigitalOutputProvider
-import com.pi4j.io.gpio.digital.DigitalState
-import com.pi4j.io.gpio.digital.DigitalStateChangeListener
+import com.pi4j.io.gpio.digital.*
 import com.pi4j.io.pwm.Pwm
 import com.pi4j.io.pwm.PwmType
+import com.pi4j.plugin.pigpio.provider.gpio.digital.PiGpioDigitalInputProvider
+import com.pi4j.plugin.pigpio.provider.gpio.digital.PiGpioDigitalOutputProvider
 import io.ktor.server.config.*
 import kotlinx.coroutines.*
 import kotlin.time.Duration.Companion.milliseconds
@@ -38,19 +37,35 @@ class DoorByGpio(config: ApplicationConfig): Door() {
             .build()
     )
 
-    private val openIndicator = pi4jContext.dout<DigitalOutputProvider>().create("BCM$doorOpenIndicatorPort")
-        .apply { config().shutdownState(DigitalState.LOW) }
-    private val lockIndicator = pi4jContext.dout<DigitalOutputProvider>().create("BCM$doorLockIndicatorPort")
-        .apply { config().shutdownState(DigitalState.LOW) }
-    private val servoSensor = pi4jContext.din<DigitalInputProvider>().create("BCM$servoSensorPort").apply {
-        addListener(onDoorLockStateChange)
-    }
-    private val doorSensor = pi4jContext.din<DigitalInputProvider>().create("BCM$doorSensorPort").apply {
-        addListener(onDoorOpenStateChange)
-    }
-    private val unlockSwitch = pi4jContext.din<DigitalInputProvider>().create("BCM$unlockSwitchPort").apply {
-        addListener(unlockSwitchListener)
-    }
+    private val openIndicator = pi4jContext.create(
+        DigitalOutputConfigBuilder.newInstance(pi4jContext)
+            .address(doorOpenIndicatorPort)
+            .provider(PiGpioDigitalOutputProvider.ID)
+    ).apply { config().shutdownState(DigitalState.LOW) }
+
+    private val lockIndicator = pi4jContext.create(
+        DigitalOutputConfigBuilder.newInstance(pi4jContext)
+            .address(doorLockIndicatorPort)
+            .provider(PiGpioDigitalOutputProvider.ID)
+    ).apply { config().shutdownState(DigitalState.LOW) }
+
+    private val servoSensor = pi4jContext.create(
+        DigitalInputConfigBuilder.newInstance(pi4jContext)
+            .address(servoSensorPort)
+            .provider(PiGpioDigitalInputProvider.ID)
+    )
+
+    private val doorSensor = pi4jContext.create(
+        DigitalInputConfigBuilder.newInstance(pi4jContext)
+            .address(doorSensorPort)
+            .provider(PiGpioDigitalInputProvider.ID)
+    )
+
+    private val unlockSwitch = pi4jContext.create(
+        DigitalInputConfigBuilder.newInstance(pi4jContext)
+            .address(unlockSwitchPort)
+            .provider(PiGpioDigitalInputProvider.ID)
+    )
 
     private val onDoorLockStateChange = DigitalStateChangeListener { event ->
         when(event?.state()) {
@@ -69,10 +84,17 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     }
 
     private val unlockSwitchListener = DigitalStateChangeListener { event ->
-        if(event?.state() == DigitalState.LOW)
+        if(event?.state() == DigitalState.LOW) {
             unlock()
+        }
     }
 
+
+    init {
+        servoSensor.addListener(onDoorLockStateChange)
+        doorSensor.addListener(onDoorOpenStateChange)
+        unlockSwitch.addListener(unlockSwitchListener)
+    }
 
     private var job: Job? = null
 
@@ -82,9 +104,9 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     }
 
     private fun moveServo(position: Number): Job = CoroutineScope(Dispatchers.Default).launch {
-        pwm.setDutyCycle(position)
+        pwm.on(position)
         delay(servoWaitTime.milliseconds)
-        pwm.setDutyCycle(0)
+        pwm.off()
     }
 
     override fun unlock() {

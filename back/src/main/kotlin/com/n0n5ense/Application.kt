@@ -38,8 +38,8 @@ private fun init(environment: ApplicationEnvironment){
     Database.connect(environment.config.property("database.path").getString(), "org.sqlite.JDBC")
     databaseInit()
 
-//    DoorService.init(DoorByGpio(environment.config))
-//    DoorService.onActionCallback = { PhysicalLogService.add(it) }
+    DoorService.init(DoorByGpio(environment.config))
+    DoorService.onActionCallback = { PhysicalLogService.add(it) }
 
     felicaHandler = FelicaHandler()
     felicaHandler.onAccepted = { DoorService.unlock() }
