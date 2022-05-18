@@ -20,17 +20,22 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     private val doorOpenIndicatorPort = config.property("gpio.doorOpenIndicatorPort").getString().toInt()
     private val doorLockIndicatorPort = config.property("gpio.doorLockIndicatorPort").getString().toInt()
 
-    private val servoLockPosition = config.property("gpio.servoLockPosition").getString().toInt()
-    private val servoUnlockPosition = config.property("gpio.servoUnlockPosition").getString().toInt()
+    private val servoLockPosition = config.property("gpio.servoLockPosition").getString().toFloat()
+    private val servoUnlockPosition = config.property("gpio.servoUnlockPosition").getString().toFloat()
     private val servoWaitTime = config.property("gpio.servoMoveWaitTimeMilli").getString().toInt()
 
     private val pi4jContext = Pi4J.newAutoContext()
     private val pwm: Pwm = pi4jContext.create(
         Pwm.newConfigBuilder(pi4jContext)
             .id("BCM$servoPort")
+            .name("servo")
             .address(servoPort)
             .pwmType(PwmType.HARDWARE)
+            .initial(0)
+            .shutdown(0)
+            .provider("pigpio-pwm")
             .frequency(50)
+            .build()
     )
 
     private val openIndicator = pi4jContext.dout<DigitalOutputProvider>().create("BCM$doorOpenIndicatorPort")

@@ -17,11 +17,13 @@ import io.ktor.util.pipeline.*
 fun Application.configureRouting() {
 
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-
         route("/api") {
+
+            get() {
+                call.respondText("Hello World!?")
+            }
+
+
             route("/user") {
                 post("/register") {
                     registerUser()
