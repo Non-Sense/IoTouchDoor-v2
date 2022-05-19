@@ -4,8 +4,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.n0n5ense.model.LoginUser
-import com.n0n5ense.model.RefreshToken
+import com.n0n5ense.model.json.LoginUser
+import com.n0n5ense.model.json.RefreshToken
 import com.n0n5ense.persistence.UserService
 import io.ktor.server.application.*
 import java.util.*

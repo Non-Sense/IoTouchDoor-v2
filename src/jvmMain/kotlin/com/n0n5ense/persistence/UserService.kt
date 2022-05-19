@@ -1,6 +1,9 @@
 package com.n0n5ense.persistence
 
 import com.n0n5ense.model.*
+import com.n0n5ense.model.json.LoginUser
+import com.n0n5ense.model.json.RegisterUser
+import com.n0n5ense.model.json.UserRole
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt

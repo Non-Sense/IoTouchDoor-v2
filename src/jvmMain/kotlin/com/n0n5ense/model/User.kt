@@ -1,6 +1,6 @@
 package com.n0n5ense.model
 
-import kotlinx.serialization.Serializable
+import com.n0n5ense.model.json.UserRole
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -14,27 +14,6 @@ object UserTable: IdTable<String>("user") {
     val enabled = bool("enabled").default(true)
     val role = text("role").default(UserRole.None.name)
 }
-
-enum class UserRole {
-    None,
-    User,
-    Moderator,
-    Admin,
-}
-
-@Serializable
-data class RegisterUser(
-    val id: String,
-    val name: String,
-    val password: String,
-    val role: UserRole = UserRole.None,
-)
-
-@Serializable
-data class LoginUser(
-    val id: String,
-    val password: String,
-)
 
 class User(id: EntityID<String>): Entity<String>(id) {
     companion object: EntityClass<String, User>(UserTable)

@@ -4,19 +4,20 @@ import com.n0n5ense.door.DoorService
 import com.n0n5ense.getPostData
 import com.n0n5ense.index
 import com.n0n5ense.isAdminRole
-import com.n0n5ense.model.*
+import com.n0n5ense.model.json.*
 import com.n0n5ense.persistence.PhysicalLogService
 import com.n0n5ense.persistence.TouchLogService
 import com.n0n5ense.persistence.UserService
-import io.ktor.server.routing.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.html.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.html.HTML
+import java.io.File
 
 
 fun Application.configureRouting() {
@@ -26,14 +27,25 @@ fun Application.configureRouting() {
         get("/") {
             call.respondHtml(HttpStatusCode.OK, HTML::index)
         }
+        get("/login") {
+            call.respondHtml(HttpStatusCode.OK, HTML::index)
+        }
+
+
         static("/static") {
-            resources()
+            staticRootFolder = File("./static")
+            files(".")
+            resource("keylocker2.js")
         }
 
         route("/api") {
 
             get() {
                 call.respondText("Hello World!?")
+            }
+
+            get("/testmodel") {
+                call.respond(DoorStatus(true,false,true))
             }
 
 
@@ -89,7 +101,7 @@ fun Application.configureRouting() {
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.registerUser(user: RegisterUser) {
 //    val post = getPostData<RegisterUser>() ?: return
-    if (UserService.get(user.id) != null) {
+    if(UserService.get(user.id) != null) {
         call.respond(HttpStatusCode.Conflict)
         return
     }
@@ -99,7 +111,7 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.registerUser(user: Re
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.login() {
     val post = getPostData<LoginUser>() ?: return
-    if (UserService.checkPassword(post)) {
+    if(UserService.checkPassword(post)) {
         call.respond(RefreshToken(Security.createRefreshToken(post)))
     } else {
         call.respond(HttpStatusCode.Forbidden)
@@ -120,13 +132,13 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.getAccessToken() {
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorLock() {
     val action = getPostData<DoorLockAction>() ?: return
     val force = action.force?.let {
-        if(!isAdminRole()){
+        if(!isAdminRole()) {
             call.respond(HttpStatusCode.Forbidden)
             return
         }
         it
-    }?:false
-    when(action.action.lowercase()){
+    } ?: false
+    when(action.action.lowercase()) {
         "lock" -> DoorService.lock(force)
         "unlock" -> DoorService.unlock()
         else -> {
@@ -138,20 +150,25 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.doorLock() {
 }
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorStatus() {
-    call.respond(HttpStatusCode.OK, DoorStatus.from(DoorService.status()))
+    val status = DoorService.status()
+    call.respond(HttpStatusCode.OK, DoorStatus(
+        status != null,
+        status?.isClose == true,
+        status?.isLock == true
+    ))
 }
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorLog() {
-    val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it<=500 }?:50
-    val p = call.parameters["p"]?.toIntOrNull()?:0
+    val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it <= 500 } ?: 50
+    val p = call.parameters["p"]?.toIntOrNull() ?: 0
     val result = PhysicalLogService.get(p, w)
         .map { DoorLog(it.id.value, it.action, it.time.toString()) }
     call.respond(HttpStatusCode.OK, result)
 }
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.cardLog() {
-    val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it<=500 }?:50
-    val p = call.parameters["p"]?.toIntOrNull()?:0
+    val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it <= 500 } ?: 50
+    val p = call.parameters["p"]?.toIntOrNull() ?: 0
     val result = TouchLogService.get(p, w)
         .map { CardTouchLog(it.id.value, it.cardId, it.accept, it.time.toString()) }
     call.respond(HttpStatusCode.OK, result)

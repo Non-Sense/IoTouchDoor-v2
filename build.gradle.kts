@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
+
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
@@ -5,6 +7,7 @@ val exposedVersion: String by project
 
 plugins {
     kotlin("multiplatform") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10"
     application
 }
 
@@ -37,6 +40,16 @@ kotlin {
         }
     }
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
         val jvmMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-server-html-builder:$ktorVersion")
@@ -60,6 +73,11 @@ kotlin {
                 implementation("io.ktor:ktor-jackson:1.6.8")
                 implementation("io.ktor:ktor-client-jackson:$ktorVersion")
 
+                runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:commonMain")
+                runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:concurrentMain")
+                runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.6.1")
+                runtimeOnly("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
+
                 implementation("com.pi4j:pi4j-core:2.1.1")
                 implementation("com.pi4j:pi4j-plugin-raspberrypi:2.1.1")
                 implementation("com.pi4j:pi4j-plugin-pigpio:2.1.1")
@@ -68,6 +86,9 @@ kotlin {
                 implementation("org.usb4java:usb4java:1.3.0")
                 implementation("org.usb4java:usb4java-javax:1.3.0")
                 implementation("com.igormaznitsa:jbbp:1.4.1")
+
+                implementation(kotlin("test"))
+                implementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
             }
         }
         val jvmTest by getting
@@ -75,7 +96,18 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:17.0.2-pre.290-kotlin-1.6.10")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:17.0.2-pre.290-kotlin-1.6.10")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom:6.3.0-pre.325-kotlin-1.6.10")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-css:17.0.2-pre.290-kotlin-1.6.10")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:11.8.2-pre.325-kotlin-1.6.10")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:5.5.3-pre.325-kotlin-1.6.10")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:5.5.1-pre.325-kotlin-1.6.10")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-muix-data-grid:5.10.0-pre.337")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-popper:2.2.5-pre.325-kotlin-1.6.10")
+
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+                implementation(npm("js-cookie","3.0.1"))
+//                implementation(npm("react-admin", "4.0.4"))
             }
         }
     }
@@ -95,7 +127,16 @@ tasks.named<JavaExec>("run") {
     classpath(tasks.named<Jar>("jvmJar"))
 }
 
-dependencies {
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+tasks.getByName<Jar>("jvmJar") {
+    val taskName = if (project.hasProperty("isProduction")
+        || project.gradle.startParameter.taskNames.contains("installDist")
+    ) {
+        "jsBrowserProductionWebpack"
+    } else {
+        "jsBrowserDevelopmentWebpack"
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    val webpackTask = tasks.getByName<KotlinWebpack>(taskName)
+    dependsOn(webpackTask) // make sure JS gets compiled first
+    from(File(webpackTask.destinationDirectory, webpackTask.outputFileName)) // bring output file along into the JAR
 }

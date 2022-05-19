@@ -1,4 +1,4 @@
-package com.n0n5ense.model
+package com.n0n5ense.model.json
 
 import kotlinx.serialization.Serializable
 
