@@ -1,6 +1,7 @@
 package cookie
 
 import kotlinext.js.asJsObject
+import kotlin.js.Json
 
 private external fun require(name: String): dynamic
 
@@ -45,8 +46,9 @@ class Cookies {
             return jsCookie.get(name) as? String
         }
 
-        fun get(): dynamic {
-            return jsCookie.get()
+        @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
+        fun get(): Json {
+            return jsCookie.get() as Json
         }
 
         fun remove(name: String, options: CookieOptions) {
