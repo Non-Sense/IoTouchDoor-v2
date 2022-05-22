@@ -1,37 +1,39 @@
 import com.n0n5ense.model.json.LoginUser
 import com.n0n5ense.model.json.RefreshToken
+import cookie.Cookies
 import csstype.*
-import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import mui.material.*
 import mui.system.sx
-import org.w3c.fetch.RequestInit
-import react.FC
-import react.Props
-import react.ReactNode
+import react.*
 import react.dom.html.InputType
 import react.dom.onChange
-
-data class LoginInfo(
-    val refreshToken: RefreshToken
-)
-
-external interface LoginComponentProps: Props {
-    var onLogin: ((LoginInfo) -> Unit)
-}
+import react.router.useNavigate
 
 private interface InputValue {
     var value: String
 }
 
-val LoginPage = FC<LoginComponentProps> { props ->
-    var userId = ""
-    var password = ""
+val LoginPage = FC<Props> {
+    var userId by useState("")
+    var password by useState("")
+    var snackbarOpen by useState(false)
+    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+    var authUser by useContext(AuthUserContext)
+    val navigate = useNavigate()
+
+    fun login() {
+        attemptLogin(LoginUser(userId, password)) {
+            it.onSuccess { token ->
+                Cookies.set(tokenCookieName, token.refreshToken)
+                authUser = AuthUser(token.refreshToken)
+                navigate("/unk")
+            }.onFailure {
+                snackbarOpen = true
+            }
+        }
+    }
 
     Grid {
         container = true
@@ -67,6 +69,10 @@ val LoginPage = FC<LoginComponentProps> { props ->
                         onChange = {
                             userId = (it.target.unsafeCast<InputValue>().value)
                         }
+                        onKeyDown = {
+                            if(it.key == "Enter")
+                                login()
+                        }
                     }
                     TextField {
                         id = "password"
@@ -79,6 +85,10 @@ val LoginPage = FC<LoginComponentProps> { props ->
                         onChange = {
                             password = (it.target.unsafeCast<InputValue>().value)
                         }
+                        onKeyDown = {
+                            if(it.key == "Enter")
+                                login()
+                        }
                     }
                     CardActions {
                         sx {
@@ -88,26 +98,7 @@ val LoginPage = FC<LoginComponentProps> { props ->
                             +"Login"
                             variant = ButtonVariant.contained
                             onClick = {
-                                attemptLogin(LoginUser(userId, password)){
-                                    it.onSuccess { token ->
-                                        props.onLogin(LoginInfo(token))
-                                    }.onFailure {
-                                        Snackbar {
-                                            onClose = { _,_ ->
-
-                                            }
-                                            open = true
-                                            autoHideDuration = 3000
-                                            Alert {
-                                                severity = AlertColor.error
-                                                +"Login failed"
-                                            }
-                                            sx {
-                                                width = 100.vw
-                                            }
-                                        }
-                                    }
-                                }
+                                login()
                             }
                         }
                     }
@@ -115,9 +106,23 @@ val LoginPage = FC<LoginComponentProps> { props ->
             }
         }
     }
+    Snackbar {
+        onClose = { _, _ ->
+            snackbarOpen = false
+        }
+        open = snackbarOpen
+        autoHideDuration = 2000
+        Alert {
+            severity = AlertColor.error
+            +"Login failed"
+        }
+        sx {
+            width = 100.vw
+        }
+    }
 }
 
-private fun attemptLogin(user: LoginUser, callback:((Result<RefreshToken>)->Unit)){
+private fun attemptLogin(user: LoginUser, callback: ((Result<RefreshToken>) -> Unit)) {
     MainScope().launch {
         callback.invoke(postJsonData("$serverAddress/api/user/auth", user))
     }

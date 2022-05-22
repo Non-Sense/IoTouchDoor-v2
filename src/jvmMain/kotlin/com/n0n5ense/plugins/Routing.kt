@@ -20,22 +20,27 @@ import kotlinx.html.HTML
 import java.io.File
 
 
+private val reactPages = listOf(
+    "/",
+    "/login",
+    "/logout",
+    "/unk"
+)
+
 fun Application.configureRouting() {
 
     routing {
-
-        get("/") {
-            call.respondHtml(HttpStatusCode.OK, HTML::index)
+        reactPages.forEach {
+            get(it) {
+                call.respondHtml(HttpStatusCode.OK, HTML::index)
+            }
         }
-        get("/login") {
-            call.respondHtml(HttpStatusCode.OK, HTML::index)
-        }
-
 
         static("/static") {
             staticRootFolder = File("./static")
             files(".")
             resource("keylocker2.js")
+            resource("keylocker2.js.map")
         }
 
         route("/api") {

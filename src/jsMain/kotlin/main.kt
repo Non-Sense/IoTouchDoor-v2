@@ -8,5 +8,5 @@ fun main() {
     val container = document.createElement("div")
     document.body!!.appendChild(container)
 
-    render(ApplicationRoot.create(), container)
+    render(Application.create(), container)
 }
