@@ -3,7 +3,8 @@ import react.router.Navigate
 
 
 data class AuthUser(
-    var refreshToken: String
+    var refreshToken: String,
+    var accessToken: String?,
 )
 
 typealias AuthUserState = StateInstance<AuthUser?>

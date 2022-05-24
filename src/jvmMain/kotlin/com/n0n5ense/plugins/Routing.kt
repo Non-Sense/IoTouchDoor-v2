@@ -24,7 +24,8 @@ private val reactPages = listOf(
     "/",
     "/login",
     "/logout",
-    "/unk"
+    "/unk",
+    "/touchlog",
 )
 
 fun Application.configureRouting() {
@@ -94,6 +95,9 @@ fun Application.configureRouting() {
                     }
                     get("/log") {
                         cardLog()
+                    }
+                    get("/logcount") {
+                        cardLogCount()
                     }
                 }
 
@@ -174,7 +178,11 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.doorLog() {
 private suspend fun PipelineContext<Unit, ApplicationCall>.cardLog() {
     val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it <= 500 } ?: 50
     val p = call.parameters["p"]?.toIntOrNull() ?: 0
-    val result = TouchLogService.get(p, w)
-        .map { CardTouchLog(it.id.value, it.cardId, it.accept, it.time.toString()) }
+    val result = TouchLogService.getWithName(p, w)
+    call.respond(HttpStatusCode.OK, result)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.cardLogCount() {
+    val result = TouchLogService.count()
     call.respond(HttpStatusCode.OK, result)
 }

@@ -25,8 +25,13 @@ data class DoorLog(
 @Serializable
 data class CardTouchLog(
     val id: Int,
+    val name: String?,
     val cardId: String,
     val accept: Boolean,
     val time: String
 )
 
+@Serializable
+data class Count(
+    val count: Long
+)

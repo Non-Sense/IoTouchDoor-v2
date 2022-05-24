@@ -1,3 +1,8 @@
+package component
+
+import AuthUser
+import AuthUserContext
+import ValueInterface
 import com.n0n5ense.model.json.LoginUser
 import com.n0n5ense.model.json.RefreshToken
 import cookie.Cookies
@@ -6,14 +11,14 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.system.sx
+import postJsonData
 import react.*
 import react.dom.html.InputType
 import react.dom.onChange
 import react.router.useNavigate
-
-private interface InputValue {
-    var value: String
-}
+import serverAddress
+import tokenCookieName
+import value
 
 val LoginPage = FC<Props> {
     var userId by useState("")
@@ -27,7 +32,7 @@ val LoginPage = FC<Props> {
         attemptLogin(LoginUser(userId, password)) {
             it.onSuccess { token ->
                 Cookies.set(tokenCookieName, token.refreshToken)
-                authUser = AuthUser(token.refreshToken)
+                authUser = AuthUser(token.refreshToken, null)
                 navigate("/unk")
             }.onFailure {
                 snackbarOpen = true
@@ -67,7 +72,7 @@ val LoginPage = FC<Props> {
                         variant = FormControlVariant.outlined
 
                         onChange = {
-                            userId = (it.target.unsafeCast<InputValue>().value)
+                            userId = (it.target.value)
                         }
                         onKeyDown = {
                             if(it.key == "Enter")
@@ -83,7 +88,7 @@ val LoginPage = FC<Props> {
                             marginTop = 10.px
                         }
                         onChange = {
-                            password = (it.target.unsafeCast<InputValue>().value)
+                            password = (it.target.value)
                         }
                         onKeyDown = {
                             if(it.key == "Enter")

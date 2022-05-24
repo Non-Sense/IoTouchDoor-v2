@@ -1,8 +1,9 @@
 import kotlinx.browser.document
+import kotlinx.browser.window
 import react.create
 import react.dom.render
 
-const val serverAddress = "http://localhost:8080"
+val serverAddress = window.location.origin
 
 fun main() {
     val container = document.createElement("div")

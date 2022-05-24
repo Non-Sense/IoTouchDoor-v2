@@ -1,3 +1,5 @@
+import component.LoginPage
+import component.TouchLog
 import cookie.Cookies
 import react.*
 import react.router.Navigate
@@ -12,7 +14,7 @@ val Application = FC<Props> {
         ThemeModule {
 
             AuthUserContext.Provider {
-                this.value = useState(Cookies.get(tokenCookieName)?.let { AuthUser(it) })
+                this.value = useState(Cookies.get(tokenCookieName)?.let { AuthUser(it, null) })
                 Routes {
                     Route {
                         path = "/login"
@@ -38,6 +40,13 @@ val Application = FC<Props> {
                         path = "/unk"
                         element = PrivateElement.create {
                             Welcome { name = "prii2"}
+                        }
+                    }
+
+                    Route {
+                        path = "/touchlog"
+                        element = PrivateElement.create {
+                            TouchLog { }
                         }
                     }
                 }

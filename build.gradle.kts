@@ -94,6 +94,8 @@ kotlin {
         val jvmTest by getting
         val jsMain by getting {
             dependencies {
+                implementation(kotlin("stdlib-js"))
+
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react:17.0.2-pre.290-kotlin-1.6.10")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:17.0.2-pre.290-kotlin-1.6.10")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom:6.3.0-pre.325-kotlin-1.6.10")
@@ -101,7 +103,7 @@ kotlin {
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:11.8.2-pre.325-kotlin-1.6.10")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:5.5.3-pre.325-kotlin-1.6.10")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:5.5.1-pre.325-kotlin-1.6.10")
-                implementation("org.jetbrains.kotlin-wrappers:kotlin-muix-data-grid:5.10.0-pre.337")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-muix-data-grid:5.8.0-pre.330-kotlin-1.6.20")
                 implementation("org.jetbrains.kotlin-wrappers:kotlin-react-popper:2.2.5-pre.325-kotlin-1.6.10")
 
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")

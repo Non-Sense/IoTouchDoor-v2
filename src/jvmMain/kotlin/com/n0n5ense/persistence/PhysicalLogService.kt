@@ -5,6 +5,7 @@ import com.n0n5ense.model.PhysicalLogAction
 import com.n0n5ense.model.PhysicalLogTable
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.Clock
 import java.time.LocalDateTime
 
 class PhysicalLogService {
@@ -15,7 +16,7 @@ class PhysicalLogService {
             }
         }
 
-        fun add(action: PhysicalLogAction, time: LocalDateTime = LocalDateTime.now()){
+        fun add(action: PhysicalLogAction, time: LocalDateTime = LocalDateTime.now(Clock.systemUTC())){
             transaction {
                 PhysicalLog.new {
                     this.action = action.name
