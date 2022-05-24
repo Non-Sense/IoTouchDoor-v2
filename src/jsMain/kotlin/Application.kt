@@ -1,5 +1,6 @@
 import component.LoginPage
 import component.TouchLog
+import component.TouchLogPage
 import cookie.Cookies
 import react.*
 import react.router.Navigate
@@ -46,7 +47,7 @@ val Application = FC<Props> {
                     Route {
                         path = "/touchlog"
                         element = PrivateElement.create {
-                            TouchLog { }
+                            TouchLogPage { }
                         }
                     }
                 }

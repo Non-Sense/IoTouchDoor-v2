@@ -41,69 +41,93 @@ private interface RowProps: Props {
 
 private val Row = FC<RowProps>{ props ->
     var open by useState(false)
-    TableRow {
-        if(props.isXsSize)
-            TableCell {
-                IconButton {
-                    size = Size.small
-                    ariaLabel = "expand row"
-                    onClick = { open = !open }
-                    +(if(open) KeyboardArrowUp else KeyboardArrowDown).create()
-                }
-            }
-        TableCell {
-            +(props.name)
-        }
-        if(!props.isXsSize)
-            TableCell {
-                +(props.cardId)
-            }
-        TableCell {
-            +(props.time)
-        }
-        TableCell {
-            if(props.accept)
-                Check { color = SvgIconColor.success }
-            else
-                Block { color = SvgIconColor.error }
-        }
-    }
-    if(props.isXsSize)
+    Fragment {
         TableRow {
-            TableCell {
-                sx {
-                    paddingBottom = 0.px
-                    paddingTop = 0.px
+            if (props.isXsSize)
+                TableCell {
+                    sx {
+                        borderBottom = 0.px
+                    }
+                    IconButton {
+                        size = Size.small
+                        ariaLabel = "expand row"
+                        onClick = { open = !open }
+                        +(if (open) KeyboardArrowUp else KeyboardArrowDown).create()
+                    }
                 }
-                colSpan = 4
-                Collapse {
-                    `in` = open
-                    timeout = "auto"
-                    Box {
+            TableCell {
+                if (props.isXsSize)
+                    sx {
+                        borderBottom = 0.px
+                    }
+                +(props.name)
+            }
+            if (!props.isXsSize)
+                TableCell {
+                    if (props.isXsSize)
                         sx {
-                            margin = 1.px
+                            borderBottom = 0.px
                         }
-                        Grid {
-                            container = true
-                            Grid {
-                                item = true
-                                xs = 6
-                                Typography {
-                                    +"Card ID: "
-                                }
+                    +(props.cardId)
+                }
+            TableCell {
+                if (props.isXsSize)
+                    sx {
+                        borderBottom = 0.px
+                    }
+                +(props.time)
+            }
+            TableCell {
+                if (props.isXsSize)
+                    sx {
+                        borderBottom = 0.px
+                    }
+                if (props.accept)
+                    Check { color = SvgIconColor.success }
+                else
+                    Block { color = SvgIconColor.error }
+            }
+        }
+        if (props.isXsSize)
+            TableRow {
+                TableCell {
+                    sx {
+                        paddingBottom = 0.px
+                        paddingTop = 0.px
+                    }
+                    colSpan = 4
+                    Collapse {
+                        `in` = open
+                        timeout = "auto"
+                        Box {
+                            sx {
+                                margin = 4.px
                             }
                             Grid {
-                                item = true
-                                xs = 6
-                                Typography {
-                                    +props.cardId
+                                container = true
+                                Grid {
+                                    item = true
+                                    xs = 4
+                                    Typography {
+                                        variant = "body2"
+                                        align = TypographyAlign.right
+                                        +"Card ID: "
+                                    }
+                                }
+                                Grid {
+                                    item = true
+                                    xs = 8
+                                    Typography {
+                                        variant = "body2"
+                                        +props.cardId
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
+    }
 }
 
 val TouchLog = FC<Props> { _ ->

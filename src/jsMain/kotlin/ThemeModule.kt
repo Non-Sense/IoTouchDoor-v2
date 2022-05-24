@@ -11,7 +11,7 @@ val ThemeContext = createContext<ThemeState>()
 
 val ThemeModule = FC<PropsWithChildren> { props ->
     val state = useState(Themes.Light)
-    val (theme) = state
+    var theme by state
 
     ThemeContext.Provider(state) {
         ThemeProvider {
