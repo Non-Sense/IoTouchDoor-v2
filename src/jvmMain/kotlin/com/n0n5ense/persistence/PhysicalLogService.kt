@@ -3,7 +3,9 @@ package com.n0n5ense.persistence
 import com.n0n5ense.model.PhysicalLog
 import com.n0n5ense.model.PhysicalLogAction
 import com.n0n5ense.model.PhysicalLogTable
+import com.n0n5ense.model.json.Count
 import org.jetbrains.exposed.sql.SchemaUtils.create
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Clock
 import java.time.LocalDateTime
@@ -27,7 +29,17 @@ class PhysicalLogService {
 
         fun get(page: Int, width: Int = 50): List<PhysicalLog> {
             return transaction {
-                PhysicalLog.all().limit(width, page.toLong()*width).toList()
+                PhysicalLog
+                    .all()
+                    .orderBy(PhysicalLogTable.id to SortOrder.DESC)
+                    .limit(width, page.toLong()*width)
+                    .toList()
+            }
+        }
+
+        fun count(): Count {
+            return transaction {
+                Count(PhysicalLog.count())
             }
         }
     }

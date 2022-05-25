@@ -25,7 +25,7 @@ import serverAddress
 import value
 import kotlin.js.Date
 
-private interface RowProps: Props {
+private interface TouchLogRowProps: Props {
     var name: String
     var cardId: String
     var time: String
@@ -33,7 +33,7 @@ private interface RowProps: Props {
     var isXsSize: Boolean
 }
 
-private val Row = FC<RowProps> { props ->
+private val TouchLogRow = FC<TouchLogRowProps> { props ->
     var open by useState(false)
     Fragment {
         TableRow {
@@ -192,7 +192,7 @@ val TouchLog = FC<Props> { _ ->
             }
             TableBody {
                 logs.forEach { log ->
-                    Row {
+                    TouchLogRow {
                         this.isXsSize = isXsSize
                         name = log.name ?: ""
                         cardId = log.cardId

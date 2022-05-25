@@ -26,6 +26,9 @@ private val reactPages = listOf(
     "/logout",
     "/unk",
     "/touchlog",
+    "/physicallog",
+    "/cards",
+    "/dashboard"
 )
 
 fun Application.configureRouting() {
@@ -83,6 +86,9 @@ fun Application.configureRouting() {
                     }
                     get("/log") {
                         doorLog()
+                    }
+                    get("/logcount") {
+                        doorLogCount()
                     }
                 }
 
@@ -165,6 +171,11 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.doorStatus() {
         status?.isClose == true,
         status?.isLock == true
     ))
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.doorLogCount() {
+    val result = PhysicalLogService.count()
+    call.respond(HttpStatusCode.OK, result)
 }
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorLog() {

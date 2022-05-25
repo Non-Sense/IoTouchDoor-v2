@@ -1,6 +1,4 @@
-import component.LoginPage
-import component.TouchLogPage
-import component.WithHeader
+import component.*
 import cookie.Cookies
 import react.FC
 import react.Props
@@ -53,6 +51,16 @@ val Application = FC<Props> {
                             WithHeader {
                                 name = "Touch log"
                                 TouchLogPage()
+                            }
+                        }
+                    }
+
+                    Route {
+                        path = "/physicallog"
+                        element = PrivateElement.create {
+                            WithHeader {
+                                name = "Physical log"
+                                PhysicalLogPage()
                             }
                         }
                     }
