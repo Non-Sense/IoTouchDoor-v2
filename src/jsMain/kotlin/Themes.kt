@@ -8,10 +8,10 @@ object Themes {
             palette = jso {
                 mode = PaletteMode.light
                 primary = jso {
-                    main = "#18C8C8"
+                    main = "#16b5b5"
                 }
                 secondary = jso {
-                    main = "#E12885"
+                    main = "#e12885"
                 }
             }
         }
@@ -22,10 +22,10 @@ object Themes {
             palette = jso {
                 mode = PaletteMode.dark
                 primary = jso {
-                    main = "#18C2C2"
+                    main = "#16b5b5"
                 }
                 secondary = jso {
-                    main = "#E12885"
+                    main = "#e12885"
                 }
             }
         }

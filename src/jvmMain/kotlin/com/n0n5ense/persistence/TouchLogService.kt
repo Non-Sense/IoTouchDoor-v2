@@ -6,6 +6,7 @@ import com.n0n5ense.model.TouchCardTable
 import com.n0n5ense.model.json.CardTouchLog
 import com.n0n5ense.model.json.Count
 import org.jetbrains.exposed.sql.SchemaUtils.create
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.leftJoin
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -40,22 +41,27 @@ class TouchLogService {
             return transaction {
                 TouchCardLogTable
                     .leftJoin(TouchCardTable, onColumn = { cardId }, otherColumn = { cardId })
-                    .slice(listOf(
-                        TouchCardLogTable.id,
-                        TouchCardTable.name,
-                        TouchCardLogTable.cardId,
-                        TouchCardLogTable.accept,
-                        TouchCardLogTable.time
-                    ))
+                    .slice(
+                        listOf(
+                            TouchCardLogTable.id,
+                            TouchCardTable.name,
+                            TouchCardLogTable.cardId,
+                            TouchCardLogTable.accept,
+                            TouchCardLogTable.time
+                        )
+                    )
                     .selectAll()
+                    .orderBy(TouchCardLogTable.id, SortOrder.DESC)
                     .limit(width, page.toLong()*width)
-                    .map { CardTouchLog(
-                        it[TouchCardLogTable.id].value,
-                        it.getOrNull(TouchCardTable.name),
-                        it[TouchCardLogTable.cardId],
-                        it[TouchCardLogTable.accept],
-                        it[TouchCardLogTable.time].toString()
-                    ) }
+                    .map {
+                        CardTouchLog(
+                            it[TouchCardLogTable.id].value,
+                            it.getOrNull(TouchCardTable.name),
+                            it[TouchCardLogTable.cardId],
+                            it[TouchCardLogTable.accept],
+                            it[TouchCardLogTable.time].toString()
+                        )
+                    }
             }
         }
 

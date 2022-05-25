@@ -6,27 +6,21 @@ import DataWithAccessToken
 import ThemeContext
 import com.n0n5ense.model.json.CardTouchLog
 import com.n0n5ense.model.json.Count
-import csstype.Display
-import csstype.Visibility
 import csstype.ex
 import csstype.px
 import getJsonDataWithTokenRetry
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.js.jso
 import mui.icons.material.Block
 import mui.icons.material.Check
 import mui.icons.material.KeyboardArrowDown
 import mui.icons.material.KeyboardArrowUp
 import mui.material.*
 import mui.system.Breakpoint
-import mui.system.Breakpoints
 import mui.system.Theme
 import mui.system.sx
 import react.*
-import react.dom.aria.ariaColSpan
 import react.dom.aria.ariaLabel
-import react.dom.aria.ariaMultiline
 import serverAddress
 import value
 import kotlin.js.Date
@@ -39,56 +33,57 @@ private interface RowProps: Props {
     var isXsSize: Boolean
 }
 
-private val Row = FC<RowProps>{ props ->
+private val Row = FC<RowProps> { props ->
     var open by useState(false)
     Fragment {
         TableRow {
-            if (props.isXsSize)
+            if(props.isXsSize)
                 TableCell {
                     sx {
                         borderBottom = 0.px
+                        padding = 0.px
                     }
                     IconButton {
                         size = Size.small
                         ariaLabel = "expand row"
                         onClick = { open = !open }
-                        +(if (open) KeyboardArrowUp else KeyboardArrowDown).create()
+                        +(if(open) KeyboardArrowUp else KeyboardArrowDown).create()
                     }
                 }
             TableCell {
-                if (props.isXsSize)
+                if(props.isXsSize)
                     sx {
                         borderBottom = 0.px
                     }
                 +(props.name)
             }
-            if (!props.isXsSize)
+            if(!props.isXsSize)
                 TableCell {
-                    if (props.isXsSize)
+                    if(props.isXsSize)
                         sx {
                             borderBottom = 0.px
                         }
                     +(props.cardId)
                 }
             TableCell {
-                if (props.isXsSize)
+                if(props.isXsSize)
                     sx {
                         borderBottom = 0.px
                     }
                 +(props.time)
             }
             TableCell {
-                if (props.isXsSize)
+                if(props.isXsSize)
                     sx {
                         borderBottom = 0.px
                     }
-                if (props.accept)
+                if(props.accept)
                     Check { color = SvgIconColor.success }
                 else
                     Block { color = SvgIconColor.error }
             }
         }
-        if (props.isXsSize)
+        if(props.isXsSize)
             TableRow {
                 TableCell {
                     sx {
@@ -170,13 +165,6 @@ val TouchLog = FC<Props> { _ ->
         }
     }
 
-    Button {
-        +"Get"
-        onClick = {
-            updateCount()
-            updateLog()
-        }
-    }
     TableContainer {
         Table {
             TableHead {
@@ -196,59 +184,30 @@ val TouchLog = FC<Props> { _ ->
                         }
                     }
                 TableCell {
-                    +("Time(${js("Intl.DateTimeFormat().resolvedOptions().timeZone")})")
+                    +("Time (${js("Intl.DateTimeFormat().resolvedOptions().timeZone")})")
                 }
                 TableCell {
                     +"Accept"
                 }
             }
             TableBody {
-                logs.map { log ->
+                logs.forEach { log ->
                     Row {
                         this.isXsSize = isXsSize
-                        name = log.name?:""
+                        name = log.name ?: ""
                         cardId = log.cardId
                         val date = Date(log.time).let { d ->
-                            Date(d.getTime()-d.getTimezoneOffset()*60000)
+                            Date(d.getTime() - d.getTimezoneOffset()*60000)
                         }
                         time = date.toLocaleString("ja-JP")
                         accept = log.accept
                     }
                 }
-//                logs.map {
-//                    TableRow {
-//                        if(isXsSize)
-//                            TableCell {
-//                                IconButton {
-//                                    size = Size.small
-//                                    ariaLabel = "expand row"
-//                                }
-//                            }
-//                        TableCell {
-//                            +(it.name ?: "")
-//                        }
-//                        if(!isXsSize)
-//                            TableCell {
-//                                +(it.cardId)
-//                            }
-//                        TableCell {
-//                            val date = Date(it.time).let { d ->
-//                                Date(d.getTime()-d.getTimezoneOffset()*60000)
-//                            }
-//                            +(date.toLocaleString("ja-JP"))
-//                        }
-//                        TableCell {
-//                            if(it.accept)
-//                                Check { color = SvgIconColor.success }
-//                            else
-//                                Block { color = SvgIconColor.error }
-//                        }
-//                    }
-//                }
             }
             TableFooter {
                 TableRow {
                     TablePagination {
+                        labelRowsPerPage = ReactNode("")
                         rowsPerPageOptions = arrayOf(25, 50, 100, 200, 500)
                         rowsPerPage = width
                         this.page = page

@@ -1,12 +1,15 @@
 import component.LoginPage
-import component.TouchLog
 import component.TouchLogPage
+import component.WithHeader
 import cookie.Cookies
-import react.*
+import react.FC
+import react.Props
+import react.create
 import react.router.Navigate
 import react.router.Route
 import react.router.Routes
 import react.router.dom.BrowserRouter
+import react.useState
 
 const val tokenCookieName = "rt"
 
@@ -34,20 +37,23 @@ val Application = FC<Props> {
 
                     Route {
                         index = true
-                        element = Welcome.create { name = "kt"}
+                        element = Welcome.create { name = "kt" }
                     }
 
                     Route {
                         path = "/unk"
                         element = PrivateElement.create {
-                            Welcome { name = "prii2"}
+                            Welcome { name = "prii2" }
                         }
                     }
 
                     Route {
                         path = "/touchlog"
                         element = PrivateElement.create {
-                            TouchLogPage { }
+                            WithHeader {
+                                name = "Touch log"
+                                TouchLogPage()
+                            }
                         }
                     }
                 }
