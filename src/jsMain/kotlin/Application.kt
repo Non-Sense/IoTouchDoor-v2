@@ -64,6 +64,16 @@ val Application = FC<Props> {
                             }
                         }
                     }
+
+                    Route {
+                        path = "/cards"
+                        element = PrivateElement.create {
+                            WithHeader {
+                                name = "Card list"
+                                CardListPage()
+                            }
+                        }
+                    }
                 }
             }
         }

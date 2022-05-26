@@ -35,3 +35,26 @@ data class CardTouchLog(
 data class Count(
     val count: Long
 )
+
+@Serializable
+data class NewTouchCard(
+    val name: String,
+    val cardId: String,
+    val enabled: Boolean,
+    val owner: String? = null
+)
+
+@Serializable
+data class EditTouchCard(
+    val name: String?,
+    val enabled: Boolean?
+)
+
+@Serializable
+data class TouchCard(
+    val id: Int,
+    val name: String,
+    val cardId: String,
+    val enabled: Boolean,
+    val owner: String?
+)

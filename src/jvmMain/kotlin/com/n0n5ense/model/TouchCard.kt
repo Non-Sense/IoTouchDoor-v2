@@ -1,6 +1,5 @@
 package com.n0n5ense.model
 
-import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -21,33 +20,4 @@ class TouchCardEntity(id: EntityID<Int>): IntEntity(id){
     var cardId by TouchCardTable.cardId
     var enabled by TouchCardTable.enabled
     var owner by TouchCardTable.owner
-}
-
-@Serializable
-data class NewTouchCard(
-    val name: String,
-    val cardId: String,
-    val enabled: Boolean,
-    val owner: String? = null
-)
-
-@Serializable
-data class TouchCard(
-    val id: Int,
-    val name: String,
-    val cardId: String,
-    val enabled: Boolean,
-    val owner: String?
-){
-    companion object{
-        fun fromEntity(entity: TouchCardEntity): TouchCard{
-            return TouchCard(
-                entity.id.value,
-                entity.name,
-                entity.cardId,
-                entity.enabled,
-                entity.owner?.value
-            )
-        }
-    }
 }

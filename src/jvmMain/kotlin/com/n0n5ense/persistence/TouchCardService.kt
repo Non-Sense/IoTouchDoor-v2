@@ -1,13 +1,28 @@
 package com.n0n5ense.persistence
 
 import com.n0n5ense.model.*
+import com.n0n5ense.model.json.Count
+import com.n0n5ense.model.json.NewTouchCard
+import com.n0n5ense.model.json.TouchCard
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class TouchCardService {
     companion object {
+
+        private fun fromEntity(entity: TouchCardEntity): TouchCard{
+            return TouchCard(
+                entity.id.value,
+                entity.name,
+                entity.cardId,
+                entity.enabled,
+                entity.owner?.value
+            )
+        }
+
         fun init() {
             transaction {
                 create(TouchCardTable)
@@ -25,6 +40,36 @@ class TouchCardService {
             }
         }
 
+        fun get(id: Int): TouchCard? {
+            return transaction {
+                TouchCardEntity.findById(id)?.let(::fromEntity)
+            }
+        }
+
+        fun get(page: Int, width: Int = 50): List<TouchCard> {
+            return transaction {
+                TouchCardEntity
+                    .all()
+                    .limit(width, page.toLong()*width)
+                    .toList()
+                    .map(::fromEntity)
+            }
+        }
+
+        fun delete(id: Int): Boolean {
+            return transaction {
+                TouchCardEntity.findById(id)?.apply {
+                    this.delete()
+                }
+            } != null
+        }
+
+        fun count(): Count {
+            return transaction {
+                Count(TouchCardEntity.count())
+            }
+        }
+
         fun find(cardId: String): TouchCard? {
             return kotlin.runCatching {
                 transaction {
@@ -32,7 +77,7 @@ class TouchCardService {
                         TouchCardTable.cardId eq cardId
                     }.single()
                 }
-            }.map(TouchCard.Companion::fromEntity).getOrNull()
+            }.map(::fromEntity).getOrNull()
         }
 
         fun updateOwner(owner: String, id: Int) {
@@ -41,24 +86,20 @@ class TouchCardService {
             }
         }
 
-        fun updateName(name: String, id: Int, userId: String): Boolean {
+        fun updateName(id: Int, name: String): Boolean {
             return transaction {
-                findTouchCard(id, userId)?.let {
-                    it.name = name
+                TouchCardEntity.findById(id)?.apply {
+                    this.name = name
                 } != null
             }
         }
 
-        fun updateEnable(enabled: Boolean, id: Int, userId: String): Boolean {
+        fun updateEnable(id: Int, enabled: Boolean): Boolean {
             return transaction {
-                findTouchCard(id, userId)?.let {
-                    it.enabled = enabled
+                TouchCardEntity.findById(id)?.apply {
+                    this.enabled = enabled
                 } != null
             }
-        }
-
-        private fun Transaction.findTouchCard(id: Int, userId: String): TouchCardEntity? {
-            return TouchCardEntity.findById(id).takeIf { it?.owner?.value == userId }
         }
     }
 }

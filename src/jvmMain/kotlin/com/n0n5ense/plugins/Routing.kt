@@ -6,6 +6,7 @@ import com.n0n5ense.index
 import com.n0n5ense.isAdminRole
 import com.n0n5ense.model.json.*
 import com.n0n5ense.persistence.PhysicalLogService
+import com.n0n5ense.persistence.TouchCardService
 import com.n0n5ense.persistence.TouchLogService
 import com.n0n5ense.persistence.UserService
 import io.ktor.http.*
@@ -54,7 +55,7 @@ fun Application.configureRouting() {
             }
 
             get("/testmodel") {
-                call.respond(DoorStatus(true,false,true))
+                call.respond(DoorStatus(true, false, true))
             }
 
 
@@ -93,11 +94,20 @@ fun Application.configureRouting() {
                 }
 
                 route("/card") {
-                    post {
-
-                    }
                     get {
-
+                        getCards()
+                    }
+                    post {
+                        newCard()
+                    }
+                    put("/{id}") {
+                        putCard()
+                    }
+                    delete("/{id}") {
+                        deleteCard()
+                    }
+                    get("/count") {
+                        getCardCount()
                     }
                     get("/log") {
                         cardLog()
@@ -166,11 +176,13 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.doorLock() {
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorStatus() {
     val status = DoorService.status()
-    call.respond(HttpStatusCode.OK, DoorStatus(
-        status != null,
-        status?.isClose == true,
-        status?.isLock == true
-    ))
+    call.respond(
+        HttpStatusCode.OK, DoorStatus(
+            status != null,
+            status?.isClose == true,
+            status?.isLock == true
+        )
+    )
 }
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.doorLogCount() {
@@ -196,4 +208,56 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.cardLog() {
 private suspend fun PipelineContext<Unit, ApplicationCall>.cardLogCount() {
     val result = TouchLogService.count()
     call.respond(HttpStatusCode.OK, result)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.newCard() {
+    val post = getPostData<NewTouchCard>() ?: return
+    if(TouchCardService.find(post.cardId) != null) {
+        call.respond(HttpStatusCode.Conflict)
+        return
+    }
+    TouchCardService.add(post)
+    call.respond(HttpStatusCode.OK)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.getCards() {
+    val w = call.parameters["w"]?.toIntOrNull()?.takeIf { it <= 500 } ?: 50
+    val p = call.parameters["p"]?.toIntOrNull() ?: 0
+    val result = TouchCardService.get(p, w)
+    call.respond(HttpStatusCode.OK, result)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.getCardCount() {
+    val result = TouchCardService.count()
+    call.respond(HttpStatusCode.OK, result)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.putCard() {
+    val id = call.parameters["id"]?.toIntOrNull()?:run {
+        call.respond(HttpStatusCode.BadRequest)
+        return
+    }
+    val post = getPostData<EditTouchCard>() ?: return
+    val card = TouchCardService.get(id)?:run {
+        call.respond(HttpStatusCode.NotFound)
+        return
+    }
+    post.name?.let {
+        TouchCardService.updateName(id, it)
+    }
+    post.enabled?.let {
+        TouchCardService.updateEnable(id, it)
+    }
+    call.respond(HttpStatusCode.OK)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.deleteCard() {
+    val id = call.parameters["id"]?.toIntOrNull()?:run {
+        call.respond(HttpStatusCode.BadRequest)
+        return
+    }
+    if(TouchCardService.delete(id))
+        call.respond(HttpStatusCode.OK)
+    else
+        call.respond(HttpStatusCode.NotFound)
 }
