@@ -145,7 +145,7 @@ val CardList = FC<Props> {
             alertDialogOpen = false
             return
         }
-        deleteCard(card.id, authUser!!){
+        deleteCard(card.id, authUser!!) {
             dialogOpen = false
             alertDialogOpen = false
             updateCount {
@@ -248,7 +248,7 @@ val CardList = FC<Props> {
     }
 
     fun getCardInfo(): TouchCard? {
-        if(editIsAddMode){
+        if(editIsAddMode) {
             return TouchCard(
                 -1,
                 editCardName,
@@ -404,7 +404,7 @@ private fun addCard(
     card: NewTouchCard,
     authUser: AuthUser,
     callback: (Result<DataWithAccessToken<Unit>>) -> Unit
-){
+) {
     MainScope().launch {
         callback.invoke(postJsonDataWithTokenRetry("$serverAddress/api/card", authUser, card))
     }

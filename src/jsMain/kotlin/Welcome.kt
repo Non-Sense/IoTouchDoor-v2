@@ -1,18 +1,17 @@
 import com.n0n5ense.model.json.DoorStatus
-import csstype.AtRules
 import csstype.px
 import csstype.rgb
 import kotlinx.browser.window
-import kotlinx.coroutines.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.await
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import mui.material.Container
-import mui.material.MuiGrid.Companion.container
 import react.FC
 import react.Props
 import react.css.css
 import react.dom.html.InputType
-import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.input
@@ -51,7 +50,7 @@ val Welcome = FC<WelcomeProps> { props ->
             onClick = {
                 console.log("clicked!!!!??!!!")
                 MainScope().launch {
-                    getDoorStatus().let{
+                    getDoorStatus().let {
                         console.log("received: $it")
                     }
                 }
@@ -67,7 +66,7 @@ private val DoorStatusView = FC<Props> {
 
 }
 
-private suspend fun getDoorStatus(): DoorStatus{
+private suspend fun getDoorStatus(): DoorStatus {
     val response = window
         .fetch("http://localhost:8080/api/testmodel")
         .await()

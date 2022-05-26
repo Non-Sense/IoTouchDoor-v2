@@ -1,7 +1,10 @@
 package com.n0n5ense.door
 
 import com.pi4j.Pi4J
-import com.pi4j.io.gpio.digital.*
+import com.pi4j.io.gpio.digital.DigitalInputConfigBuilder
+import com.pi4j.io.gpio.digital.DigitalOutputConfigBuilder
+import com.pi4j.io.gpio.digital.DigitalState
+import com.pi4j.io.gpio.digital.DigitalStateChangeListener
 import com.pi4j.io.pwm.Pwm
 import com.pi4j.io.pwm.PwmType
 import com.pi4j.plugin.mock.platform.MockPlatform
@@ -13,8 +16,6 @@ import com.pi4j.plugin.mock.provider.i2c.MockI2CProvider
 import com.pi4j.plugin.mock.provider.pwm.MockPwmProvider
 import com.pi4j.plugin.mock.provider.serial.MockSerialProvider
 import com.pi4j.plugin.mock.provider.spi.MockSpiProvider
-import com.pi4j.plugin.pigpio.provider.gpio.digital.PiGpioDigitalInputProvider
-import com.pi4j.plugin.pigpio.provider.gpio.digital.PiGpioDigitalOutputProvider
 import io.ktor.server.config.*
 import kotlinx.coroutines.*
 import kotlin.time.Duration.Companion.milliseconds
@@ -45,7 +46,8 @@ class DoorByGpio(config: ApplicationConfig): Door() {
                 MockSerialProvider.newInstance(),
                 MockI2CProvider.newInstance(),
                 MockDigitalInputProvider.newInstance(),
-                MockDigitalOutputProvider.newInstance())
+                MockDigitalOutputProvider.newInstance()
+            )
             .build()
     }
 

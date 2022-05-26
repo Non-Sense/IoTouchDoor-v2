@@ -9,7 +9,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.pipeline.*
 
-suspend inline fun <reified T : Any> PipelineContext<Unit, ApplicationCall>.getPostData(): T? {
+suspend inline fun <reified T: Any> PipelineContext<Unit, ApplicationCall>.getPostData(): T? {
     return kotlin.runCatching {
         call.receive<T>()
     }.onFailure {

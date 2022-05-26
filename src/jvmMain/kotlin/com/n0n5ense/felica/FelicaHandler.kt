@@ -7,10 +7,10 @@ import com.n0n5ense.persistence.TouchLogService
 class FelicaHandler {
     private var felicaReader: FelicaReader? = null
 
-    var onAccepted: (()->Unit)? = null
-    var onError: ((Throwable)->Unit)? = null
+    var onAccepted: (() -> Unit)? = null
+    var onError: ((Throwable) -> Unit)? = null
 
-    fun init(){
+    fun init() {
         close()
         felicaReader = FelicaReader()
         felicaReader?.onTouch = ::onCardTouch
@@ -23,15 +23,15 @@ class FelicaHandler {
         felicaReader = null
     }
 
-    private fun onError(throwable: Throwable){
+    private fun onError(throwable: Throwable) {
         close()
         onError?.invoke(throwable)
     }
 
-    private fun onCardTouch(felicaId: FelicaId){
+    private fun onCardTouch(felicaId: FelicaId) {
         val accept = TouchCardService.find(felicaId.idm)?.enabled == true
         TouchLogService.add(felicaId.idm, accept)
-        if(accept){
+        if(accept) {
             onAccepted?.invoke()
         }
     }

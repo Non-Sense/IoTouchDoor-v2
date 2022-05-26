@@ -13,7 +13,7 @@ object TouchCardTable: IntIdTable("touchCard", "id") {
     val owner = reference("owner", UserTable.id, onDelete = ReferenceOption.SET_NULL).nullable()
 }
 
-class TouchCardEntity(id: EntityID<Int>): IntEntity(id){
+class TouchCardEntity(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<TouchCardEntity>(TouchCardTable)
 
     var name by TouchCardTable.name

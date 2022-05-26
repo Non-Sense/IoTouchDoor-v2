@@ -4,14 +4,13 @@ import mui.material.styles.ThemeProvider
 import react.*
 
 
-
 typealias ThemeState = StateInstance<Theme>
 
 val ThemeContext = createContext<ThemeState>()
 
 val ThemeModule = FC<PropsWithChildren> { props ->
     val state = useState(Themes.Light)
-    var theme by state
+    val theme by state
 
     ThemeContext.Provider(state) {
         ThemeProvider {

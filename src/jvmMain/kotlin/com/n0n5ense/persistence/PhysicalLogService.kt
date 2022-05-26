@@ -12,13 +12,13 @@ import java.time.LocalDateTime
 
 class PhysicalLogService {
     companion object {
-        fun init(){
+        fun init() {
             transaction {
                 create(PhysicalLogTable)
             }
         }
 
-        fun add(action: PhysicalLogAction, time: LocalDateTime = LocalDateTime.now(Clock.systemUTC())){
+        fun add(action: PhysicalLogAction, time: LocalDateTime = LocalDateTime.now(Clock.systemUTC())) {
             transaction {
                 PhysicalLog.new {
                     this.action = action.name

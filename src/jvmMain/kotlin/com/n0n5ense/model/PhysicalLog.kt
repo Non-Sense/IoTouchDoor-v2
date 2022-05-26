@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.javatime.datetime
 
-enum class PhysicalLogAction{
+enum class PhysicalLogAction {
     Open,
     Close,
     Unlock,

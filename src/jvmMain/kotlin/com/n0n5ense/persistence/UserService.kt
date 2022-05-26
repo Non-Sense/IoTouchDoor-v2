@@ -1,6 +1,7 @@
 package com.n0n5ense.persistence
 
-import com.n0n5ense.model.*
+import com.n0n5ense.model.User
+import com.n0n5ense.model.UserTable
 import com.n0n5ense.model.json.LoginUser
 import com.n0n5ense.model.json.RegisterUser
 import com.n0n5ense.model.json.UserRole

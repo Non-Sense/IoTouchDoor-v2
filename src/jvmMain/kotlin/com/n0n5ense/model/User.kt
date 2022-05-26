@@ -17,6 +17,7 @@ object UserTable: IdTable<String>("user") {
 
 class User(id: EntityID<String>): Entity<String>(id) {
     companion object: EntityClass<String, User>(UserTable)
+
     var name by UserTable.name
     var password by UserTable.password
     var enabled by UserTable.enabled

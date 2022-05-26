@@ -50,7 +50,7 @@ fun Application.configureRouting() {
 
         route("/api") {
 
-            get() {
+            get {
                 call.respondText("Hello World!?")
             }
 
@@ -233,12 +233,12 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.getCardCount() {
 }
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.putCard() {
-    val id = call.parameters["id"]?.toIntOrNull()?:run {
+    val id = call.parameters["id"]?.toIntOrNull() ?: run {
         call.respond(HttpStatusCode.BadRequest)
         return
     }
     val post = getPostData<EditTouchCard>() ?: return
-    val card = TouchCardService.get(id)?:run {
+    TouchCardService.get(id) ?: run {
         call.respond(HttpStatusCode.NotFound)
         return
     }
@@ -252,7 +252,7 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.putCard() {
 }
 
 private suspend fun PipelineContext<Unit, ApplicationCall>.deleteCard() {
-    val id = call.parameters["id"]?.toIntOrNull()?:run {
+    val id = call.parameters["id"]?.toIntOrNull() ?: run {
         call.respond(HttpStatusCode.BadRequest)
         return
     }

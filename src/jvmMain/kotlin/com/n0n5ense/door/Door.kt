@@ -87,11 +87,12 @@ abstract class Door {
                 }
                 beforeIsLock = isLock
                 beforeIsClose = isClose
-            } catch(e: Exception) { }
+            } catch(e: Exception) {
+            }
         }
     }
 
-    private fun log(msg: String){
+    private fun log(msg: String) {
 
     }
 

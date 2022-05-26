@@ -1,19 +1,19 @@
 package com.n0n5ense.persistence
 
-import com.n0n5ense.model.*
+import com.n0n5ense.model.TouchCardEntity
+import com.n0n5ense.model.TouchCardTable
+import com.n0n5ense.model.UserTable
 import com.n0n5ense.model.json.Count
 import com.n0n5ense.model.json.NewTouchCard
 import com.n0n5ense.model.json.TouchCard
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SchemaUtils.create
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class TouchCardService {
     companion object {
 
-        private fun fromEntity(entity: TouchCardEntity): TouchCard{
+        private fun fromEntity(entity: TouchCardEntity): TouchCard {
             return TouchCard(
                 entity.id.value,
                 entity.name,

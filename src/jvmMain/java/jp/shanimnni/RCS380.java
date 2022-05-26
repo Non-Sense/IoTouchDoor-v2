@@ -36,7 +36,7 @@ public class RCS380 {
 
         UsbEndpoint endpointOut = null, endpointIn = null;
         for (int i = 0; i < iface.getUsbEndpoints().size(); i++) {
-            byte endpointAddr = (byte) ((UsbEndpoint) (iface.getUsbEndpoints().get(i))).getUsbEndpointDescriptor().bEndpointAddress();
+            byte endpointAddr = ((UsbEndpoint) (iface.getUsbEndpoints().get(i))).getUsbEndpointDescriptor().bEndpointAddress();
             if (((endpointAddr & 0x80) == 0x80)) {
                 endpointIn = (UsbEndpoint) (iface.getUsbEndpoints().get(i));
             } else if ((endpointAddr & 0x80) == 0x00) {
@@ -112,7 +112,7 @@ public class RCS380 {
         for (Object obj : hub.getAttachedUsbDevices()) {
             if (!(obj instanceof UsbDevice))
                 continue;
-            UsbDevice device = (UsbDevice)obj;
+            UsbDevice device = (UsbDevice) obj;
             UsbDeviceDescriptor desc = device.getUsbDeviceDescriptor();
 
             if (desc.idVendor() == vendorId && desc.idProduct() == productId) return device;

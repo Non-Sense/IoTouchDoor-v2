@@ -1,13 +1,13 @@
 package com.n0n5ense.plugins
 
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.n0n5ense.model.json.LoginUser
 import com.n0n5ense.model.json.RefreshToken
 import com.n0n5ense.persistence.UserService
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import java.util.*
 
 private lateinit var audience: String
@@ -30,7 +30,7 @@ fun Application.configureSecurity(environment: ApplicationEnvironment) {
                     .build()
             )
             validate { credential ->
-                if (credential.payload.audience.contains(audience)) {
+                if(credential.payload.audience.contains(audience)) {
                     JWTPrincipal(credential.payload)
                 } else null
             }
@@ -63,7 +63,7 @@ class Security {
 
         fun createAccessToken(userId: String): String? {
             val user = UserService.get(userId) ?: return null
-            if (!user.enabled)
+            if(!user.enabled)
                 return null
             return JWT.create()
                 .withAudience(audience)

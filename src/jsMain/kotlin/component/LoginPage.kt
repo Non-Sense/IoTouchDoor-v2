@@ -2,7 +2,6 @@ package component
 
 import AuthUser
 import AuthUserContext
-import ValueInterface
 import com.n0n5ense.model.json.LoginUser
 import com.n0n5ense.model.json.RefreshToken
 import cookie.Cookies
@@ -24,6 +23,7 @@ val LoginPage = FC<Props> {
     var userId by useState("")
     var password by useState("")
     var snackbarOpen by useState(false)
+
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
     var authUser by useContext(AuthUserContext)
     val navigate = useNavigate()
