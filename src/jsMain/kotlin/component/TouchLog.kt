@@ -6,8 +6,7 @@ import DataWithAccessToken
 import ThemeContext
 import com.n0n5ense.model.json.CardTouchLog
 import com.n0n5ense.model.json.Count
-import csstype.ex
-import csstype.px
+import csstype.*
 import getJsonDataWithTokenRetry
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -16,17 +15,21 @@ import mui.icons.material.Check
 import mui.icons.material.KeyboardArrowDown
 import mui.icons.material.KeyboardArrowUp
 import mui.material.*
+import mui.material.Size
 import mui.system.Breakpoint
 import mui.system.Theme
 import mui.system.sx
 import react.*
+import react.css.css
 import react.dom.aria.ariaLabel
+import react.dom.html.ReactHTML.img
+import react.router.dom.NavLink
 import serverAddress
 import value
 import kotlin.js.Date
 
 private interface TouchLogRowProps: Props {
-    var name: String
+    var name: String?
     var cardId: String
     var time: String
     var accept: Boolean
@@ -35,6 +38,7 @@ private interface TouchLogRowProps: Props {
 
 private val TouchLogRow = FC<TouchLogRowProps> { props ->
     var open by useState(false)
+    val cardId = CardId.determineType(props.cardId)
     Fragment {
         TableRow {
             if(props.isXsSize)
@@ -55,7 +59,13 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                     sx {
                         borderBottom = 0.px
                     }
-                +(props.name)
+                if(props.name != null)
+                    +(props.name)!!
+               else
+                   NavLink {
+                       to = "/cards?i=${props.cardId}"
+                       +"Add this"
+                   }
             }
             if(!props.isXsSize)
                 TableCell {
@@ -63,7 +73,23 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                         sx {
                             borderBottom = 0.px
                         }
-                    +(props.cardId)
+                    Box {
+                        sx {
+                            display = Display.flex
+                            alignItems = AlignItems.center
+                        }
+                        if(cardId.type == CardIdType.GunmaUniv) {
+                            img {
+                                src = "static/gunma_logo.png"
+                                css {
+                                    height = 1.rem
+                                    width = 1.rem
+                                    marginRight = 3.px
+                                }
+                            }
+                        }
+                        +cardId.id
+                    }
                 }
             TableCell {
                 if(props.isXsSize)
@@ -94,29 +120,33 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                     Collapse {
                         `in` = open
                         timeout = "auto"
-                        Box {
-                            sx {
-                                margin = 4.px
+                        Toolbar {
+                            Box {
+                                Typography {
+                                    sx {
+                                        whiteSpace = WhiteSpace.nowrap
+                                        marginRight = 8.px
+                                    }
+                                    variant = "body2"
+                                    +"Card ID: "
+                                }
                             }
-                            Grid {
-                                container = true
-                                Grid {
-                                    item = true
-                                    xs = 4
-                                    Typography {
-                                        variant = "body2"
-                                        align = TypographyAlign.right
-                                        +"Card ID: "
+                            Box {
+                                sx {
+                                    display = Display.flex
+                                    alignItems = AlignItems.center
+                                }
+                                if(cardId.type == CardIdType.GunmaUniv) {
+                                    img {
+                                        src = "static/gunma_logo.png"
+                                        css {
+                                            height = 1.rem
+                                            width = 1.rem
+                                            marginRight = 3.px
+                                        }
                                     }
                                 }
-                                Grid {
-                                    item = true
-                                    xs = 8
-                                    Typography {
-                                        variant = "body2"
-                                        +props.cardId
-                                    }
-                                }
+                                +cardId.id
                             }
                         }
                     }
@@ -194,7 +224,7 @@ val TouchLog = FC<Props> { _ ->
                 logs.forEach { log ->
                     TouchLogRow {
                         this.isXsSize = isXsSize
-                        name = log.name ?: ""
+                        name = log.name
                         cardId = log.cardId
                         val date = Date(log.time).let { d ->
                             Date(d.getTime() - d.getTimezoneOffset()*60000)

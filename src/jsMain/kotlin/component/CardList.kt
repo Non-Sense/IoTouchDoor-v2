@@ -22,6 +22,7 @@ import mui.system.Breakpoint
 import mui.system.ResponsiveStyleValue
 import mui.system.Theme
 import mui.system.sx
+import org.w3c.dom.url.URLSearchParams
 import postJsonDataWithTokenRetry
 import putJsonDataWithTokenRetry
 import react.*
@@ -30,6 +31,7 @@ import react.dom.aria.ariaLabel
 import react.dom.html.InputType
 import react.dom.html.ReactHTML.div
 import react.dom.onChange
+import react.router.useLocation
 import serverAddress
 import value
 
@@ -66,6 +68,7 @@ private val CardListRow = FC<CardListRowProps> { props ->
 }
 
 val CardList = FC<Props> {
+    val search = useLocation().search
     var cards by useState<List<TouchCard>>(listOf())
     val authUser by useContext(AuthUserContext)
     var page by useState(0)
@@ -157,6 +160,15 @@ val CardList = FC<Props> {
     useEffectOnce {
         updateCount {
             updateCards()
+        }
+        val query = URLSearchParams(search)
+        query.get("i")?.let {
+            editCardId = it
+            editCardName = ""
+            editCardIdDisable = true
+            editEnabled = true
+            editIsAddMode = true
+            dialogOpen = true
         }
     }
 
