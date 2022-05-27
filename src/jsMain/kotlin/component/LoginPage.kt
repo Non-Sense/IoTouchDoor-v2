@@ -10,14 +10,14 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mui.material.*
 import mui.system.sx
-import postJsonData
+import util.postJsonData
 import react.*
 import react.dom.html.InputType
 import react.dom.onChange
 import react.router.useNavigate
 import serverAddress
 import tokenCookieName
-import value
+import util.value
 
 val LoginPage = FC<Props> {
     var userId by useState("")

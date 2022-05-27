@@ -1,15 +1,13 @@
 package component
 
-import AuthUser
 import AuthUserContext
-import DataWithAccessToken
+import util.CardId
+import util.CardIdType
 import ThemeContext
 import com.n0n5ense.model.json.CardTouchLog
-import com.n0n5ense.model.json.Count
 import csstype.*
-import getJsonDataWithTokenRetry
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import util.getTouchLog
+import util.getTouchLogCount
 import mui.icons.material.Block
 import mui.icons.material.Check
 import mui.icons.material.KeyboardArrowDown
@@ -24,8 +22,7 @@ import react.css.css
 import react.dom.aria.ariaLabel
 import react.dom.html.ReactHTML.img
 import react.router.dom.NavLink
-import serverAddress
-import value
+import util.value
 import kotlin.js.Date
 
 private interface TouchLogRowProps: Props {
@@ -61,11 +58,11 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                     }
                 if(props.name != null)
                     +(props.name)!!
-               else
-                   NavLink {
-                       to = "/cards?i=${props.cardId}"
-                       +"Add this"
-                   }
+                else
+                    NavLink {
+                        to = "/cards?i=${props.cardId}"
+                        +"Add this"
+                    }
             }
             if(!props.isXsSize)
                 TableCell {
@@ -168,7 +165,7 @@ val TouchLog = FC<Props> { _ ->
     })
 
     fun updateLog(p: Int? = null, w: Int? = null) {
-        getLogs(p ?: page, w ?: width, authUser!!) { result ->
+        getTouchLog(p ?: page, w ?: width, authUser!!) { result ->
             result.onSuccess {
                 logs = it.data
                 authUser?.accessToken = it.accessToken
@@ -178,7 +175,7 @@ val TouchLog = FC<Props> { _ ->
 
 
     fun updateCount(callback: ((Result<Long>) -> Unit)? = null) {
-        getLogCount(authUser!!) { result ->
+        getTouchLogCount(authUser!!) { result ->
             result.onSuccess {
                 count = it.data.count
                 authUser?.accessToken = it.accessToken
@@ -256,22 +253,5 @@ val TouchLog = FC<Props> { _ ->
                 }
             }
         }
-    }
-}
-
-private fun getLogs(
-    page: Int,
-    width: Int,
-    authUser: AuthUser,
-    callback: ((Result<DataWithAccessToken<List<CardTouchLog>>>) -> Unit)
-) {
-    MainScope().launch {
-        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card/log?p=$page&w=$width", authUser))
-    }
-}
-
-private fun getLogCount(authUser: AuthUser, callback: (Result<DataWithAccessToken<Count>>) -> Unit) {
-    MainScope().launch {
-        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card/logcount", authUser))
     }
 }

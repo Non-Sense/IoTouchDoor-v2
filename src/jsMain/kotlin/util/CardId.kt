@@ -1,3 +1,5 @@
+package util
+
 enum class CardIdType {
     Felica,
     GunmaUniv,

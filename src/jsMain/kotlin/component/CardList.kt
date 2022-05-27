@@ -1,18 +1,15 @@
 package component
 
-import AuthUser
 import AuthUserContext
-import DataWithAccessToken
-import com.n0n5ense.model.json.Count
+import util.addCard
 import com.n0n5ense.model.json.EditTouchCard
 import com.n0n5ense.model.json.NewTouchCard
 import com.n0n5ense.model.json.TouchCard
 import csstype.number
 import csstype.px
-import deleteWithTokenRetry
-import getJsonDataWithTokenRetry
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import util.deleteCard
+import util.getCardCount
+import util.getCards
 import mui.icons.material.Add
 import mui.icons.material.Block
 import mui.icons.material.Check
@@ -23,8 +20,7 @@ import mui.system.ResponsiveStyleValue
 import mui.system.Theme
 import mui.system.sx
 import org.w3c.dom.url.URLSearchParams
-import postJsonDataWithTokenRetry
-import putJsonDataWithTokenRetry
+import util.putCard
 import react.*
 import react.css.css
 import react.dom.aria.ariaLabel
@@ -32,8 +28,7 @@ import react.dom.html.InputType
 import react.dom.html.ReactHTML.div
 import react.dom.onChange
 import react.router.useLocation
-import serverAddress
-import value
+import util.value
 
 private interface CardListRowProps: Props {
     var card: TouchCard
@@ -393,52 +388,4 @@ val CardList = FC<Props> {
 
     }
 
-}
-
-private fun getCards(
-    page: Int,
-    width: Int,
-    authUser: AuthUser,
-    callback: ((Result<DataWithAccessToken<List<TouchCard>>>) -> Unit)
-) {
-    MainScope().launch {
-        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card?p=$page&w=$width", authUser))
-    }
-}
-
-private fun getCardCount(authUser: AuthUser, callback: (Result<DataWithAccessToken<Count>>) -> Unit) {
-    MainScope().launch {
-        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card/count", authUser))
-    }
-}
-
-private fun addCard(
-    card: NewTouchCard,
-    authUser: AuthUser,
-    callback: (Result<DataWithAccessToken<Unit>>) -> Unit
-) {
-    MainScope().launch {
-        callback.invoke(postJsonDataWithTokenRetry("$serverAddress/api/card", authUser, card))
-    }
-}
-
-private fun putCard(
-    cardId: Int,
-    card: EditTouchCard,
-    authUser: AuthUser,
-    callback: ((Result<DataWithAccessToken<Unit>>) -> Unit)
-) {
-    MainScope().launch {
-        callback.invoke(putJsonDataWithTokenRetry("$serverAddress/api/card/$cardId", authUser, card))
-    }
-}
-
-private fun deleteCard(
-    cardId: Int,
-    authUser: AuthUser,
-    callback: ((Result<DataWithAccessToken<Unit>>) -> Unit)
-) {
-    MainScope().launch {
-        callback.invoke(deleteWithTokenRetry("$serverAddress/api/card/$cardId", authUser))
-    }
 }

@@ -74,6 +74,18 @@ val Application = FC<Props> {
                             }
                         }
                     }
+
+
+
+                    Route {
+                        path = "/dashboard"
+                        element = PrivateElement.create {
+                            WithHeader {
+                                name = "Dashboard"
+                                DashboardPage()
+                            }
+                        }
+                    }
                 }
             }
         }

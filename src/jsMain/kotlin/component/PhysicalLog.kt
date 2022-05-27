@@ -1,17 +1,12 @@
 package component
 
-import AuthUser
 import AuthUserContext
-import DataWithAccessToken
-import com.n0n5ense.model.json.Count
 import com.n0n5ense.model.json.DoorLog
-import getJsonDataWithTokenRetry
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import util.getPhysicalLog
+import util.getPhysicalLogCount
 import mui.material.*
 import react.*
-import serverAddress
-import value
+import util.value
 import kotlin.js.Date
 
 private interface PhysicalLogRowProps: Props {
@@ -38,7 +33,7 @@ val PhysicalLog = FC<Props> { _ ->
     var count by useState(0L)
 
     fun updateLog(p: Int? = null, w: Int? = null) {
-        getLogs(p ?: page, w ?: width, authUser!!) { result ->
+        getPhysicalLog(p ?: page, w ?: width, authUser!!) { result ->
             result.onSuccess {
                 logs = it.data
                 authUser?.accessToken = it.accessToken
@@ -47,7 +42,7 @@ val PhysicalLog = FC<Props> { _ ->
     }
 
     fun updateCount(callback: ((Result<Long>) -> Unit)? = null) {
-        getLogCount(authUser!!) { result ->
+        getPhysicalLogCount(authUser!!) { result ->
             result.onSuccess {
                 count = it.data.count
                 authUser?.accessToken = it.accessToken
@@ -109,21 +104,4 @@ val PhysicalLog = FC<Props> { _ ->
         }
     }
 
-}
-
-private fun getLogs(
-    page: Int,
-    width: Int,
-    authUser: AuthUser,
-    callback: ((Result<DataWithAccessToken<List<DoorLog>>>) -> Unit)
-) {
-    MainScope().launch {
-        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/door/log?p=$page&w=$width", authUser))
-    }
-}
-
-private fun getLogCount(authUser: AuthUser, callback: (Result<DataWithAccessToken<Count>>) -> Unit) {
-    MainScope().launch {
-        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/door/logcount", authUser))
-    }
 }

@@ -1,13 +1,102 @@
-import com.n0n5ense.model.json.AccessToken
-import com.n0n5ense.model.json.RefreshToken
+package util
+
+import AuthUser
+import com.n0n5ense.model.json.*
 import kotlinx.browser.window
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.await
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.w3c.dom.events.EventTarget
 import org.w3c.fetch.Headers
 import org.w3c.fetch.RequestInit
+import serverAddress
+
+fun getPhysicalLog(
+    page: Int,
+    width: Int,
+    authUser: AuthUser,
+    callback: ((Result<DataWithAccessToken<List<DoorLog>>>) -> Unit)
+) {
+    MainScope().launch {
+        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/door/log?p=$page&w=$width", authUser))
+    }
+}
+
+fun getPhysicalLogCount(authUser: AuthUser, callback: (Result<DataWithAccessToken<Count>>) -> Unit) {
+    MainScope().launch {
+        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/door/logcount", authUser))
+    }
+}
+
+
+fun getTouchLog(
+    page: Int,
+    width: Int,
+    authUser: AuthUser,
+    callback: ((Result<DataWithAccessToken<List<CardTouchLog>>>) -> Unit)
+) {
+    MainScope().launch {
+        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card/log?p=$page&w=$width", authUser))
+    }
+}
+
+fun getTouchLogCount(authUser: AuthUser, callback: (Result<DataWithAccessToken<Count>>) -> Unit) {
+    MainScope().launch {
+        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card/logcount", authUser))
+    }
+}
+
+
+
+fun getCards(
+    page: Int,
+    width: Int,
+    authUser: AuthUser,
+    callback: ((Result<DataWithAccessToken<List<TouchCard>>>) -> Unit)
+) {
+    MainScope().launch {
+        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card?p=$page&w=$width", authUser))
+    }
+}
+
+fun getCardCount(authUser: AuthUser, callback: (Result<DataWithAccessToken<Count>>) -> Unit) {
+    MainScope().launch {
+        callback.invoke(getJsonDataWithTokenRetry("$serverAddress/api/card/count", authUser))
+    }
+}
+
+fun addCard(
+    card: NewTouchCard,
+    authUser: AuthUser,
+    callback: (Result<DataWithAccessToken<Unit>>) -> Unit
+) {
+    MainScope().launch {
+        callback.invoke(postJsonDataWithTokenRetry("$serverAddress/api/card", authUser, card))
+    }
+}
+
+fun putCard(
+    cardId: Int,
+    card: EditTouchCard,
+    authUser: AuthUser,
+    callback: ((Result<DataWithAccessToken<Unit>>) -> Unit)
+) {
+    MainScope().launch {
+        callback.invoke(putJsonDataWithTokenRetry("$serverAddress/api/card/$cardId", authUser, card))
+    }
+}
+
+fun deleteCard(
+    cardId: Int,
+    authUser: AuthUser,
+    callback: ((Result<DataWithAccessToken<Unit>>) -> Unit)
+) {
+    MainScope().launch {
+        callback.invoke(deleteWithTokenRetry("$serverAddress/api/card/$cardId", authUser))
+    }
+}
 
 enum class RequestMethod {
     GET,
@@ -15,15 +104,6 @@ enum class RequestMethod {
     PUT,
     DELETE
 }
-
-interface ValueInterface {
-    var value: String
-}
-
-val EventTarget.value: String
-    get() {
-        return this.unsafeCast<ValueInterface>().value
-    }
 
 class NetException(val code: Int): Exception()
 
