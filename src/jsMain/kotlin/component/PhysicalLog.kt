@@ -2,6 +2,8 @@ package component
 
 import AuthUserContext
 import com.n0n5ense.model.json.DoorLog
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import util.getPhysicalLog
 import util.getPhysicalLogCount
 import mui.material.*
@@ -9,7 +11,7 @@ import react.*
 import util.value
 import kotlin.js.Date
 
-private interface PhysicalLogRowProps: Props {
+private interface PhysicalLogRowProps : Props {
     var action: String
     var time: String
 }
@@ -33,8 +35,8 @@ val PhysicalLog = FC<Props> { _ ->
     var count by useState(0L)
 
     fun updateLog(p: Int? = null, w: Int? = null) {
-        getPhysicalLog(p ?: page, w ?: width, authUser!!) { result ->
-            result.onSuccess {
+        MainScope().launch {
+            getPhysicalLog(p ?: page, w ?: width, authUser!!).onSuccess {
                 logs = it.data
                 authUser?.accessToken = it.accessToken
             }
@@ -42,13 +44,14 @@ val PhysicalLog = FC<Props> { _ ->
     }
 
     fun updateCount(callback: ((Result<Long>) -> Unit)? = null) {
-        getPhysicalLogCount(authUser!!) { result ->
-            result.onSuccess {
+        MainScope().launch {
+            getPhysicalLogCount(authUser!!).onSuccess {
                 count = it.data.count
                 authUser?.accessToken = it.accessToken
-                callback?.invoke(Result.success(it.data.count))
-            }.onFailure {
-                callback?.invoke(Result.failure(it))
+            }.map {
+                it.data.count
+            }.let {
+                callback?.invoke(it)
             }
         }
     }
@@ -74,7 +77,7 @@ val PhysicalLog = FC<Props> { _ ->
                     PhysicalLogRow {
                         action = log.action
                         val date = Date(log.time).let { d ->
-                            Date(d.getTime() - d.getTimezoneOffset()*60000)
+                            Date(d.getTime() - d.getTimezoneOffset() * 60000)
                         }
                         time = date.toLocaleString("ja-JP")
                     }

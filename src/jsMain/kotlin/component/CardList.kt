@@ -7,6 +7,8 @@ import com.n0n5ense.model.json.NewTouchCard
 import com.n0n5ense.model.json.TouchCard
 import csstype.number
 import csstype.px
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import util.deleteCard
 import util.getCardCount
 import util.getCards
@@ -30,7 +32,7 @@ import react.dom.onChange
 import react.router.useLocation
 import util.value
 
-private interface CardListRowProps: Props {
+private interface CardListRowProps : Props {
     var card: TouchCard
     var onClickEditButton: () -> Unit
     var isXsSize: Boolean
@@ -41,12 +43,12 @@ private val CardListRow = FC<CardListRowProps> { props ->
         TableCell {
             +props.card.name
         }
-        if(!props.isXsSize)
+        if (!props.isXsSize)
             TableCell {
                 +props.card.cardId
             }
         TableCell {
-            if(props.card.enabled)
+            if (props.card.enabled)
                 Check { color = SvgIconColor.success }
             else
                 Block { color = SvgIconColor.error }
@@ -85,69 +87,82 @@ val CardList = FC<Props> {
     })
 
     fun updateCards(p: Int? = null, w: Int? = null) {
-        getCards(p ?: page, w ?: width, authUser!!) { result ->
-            result.onSuccess {
+        MainScope().launch {
+            getCards(p ?: page, w ?: width, authUser!!).onSuccess {
                 cards = it.data
                 authUser?.accessToken = it.accessToken
             }
         }
+
     }
 
     fun updateCount(callback: ((Result<Long>) -> Unit)? = null) {
-        getCardCount(authUser!!) { result ->
-            result.onSuccess {
-                count = it.data.count
-                authUser?.accessToken = it.accessToken
-                callback?.invoke(Result.success(it.data.count))
-            }.onFailure {
-                callback?.invoke(Result.failure(it))
-            }
+        MainScope().launch {
+            getCardCount(authUser!!)
+                .onSuccess {
+                    count = it.data.count
+                    authUser?.accessToken = it.accessToken
+                }.map {
+                    it.data.count
+                }.let {
+                    callback?.invoke(it)
+                }
         }
     }
 
     fun onDialogClose(card: TouchCard?) {
-        if(card == null || authUser == null) {
+        if (card == null || authUser == null) {
             dialogOpen = false
             alertDialogOpen = false
             return
         }
-        if(editIsAddMode) {
-            addCard(
-                NewTouchCard(card.name, card.cardId, card.enabled, card.owner),
-                authUser!!
-            ) {
-                dialogOpen = false
-                alertDialogOpen = false
-                updateCount {
-                    updateCards()
+        if (editIsAddMode) {
+            MainScope().launch {
+                addCard(
+                    NewTouchCard(card.name, card.cardId, card.enabled, card.owner),
+                    authUser!!
+                ).onSuccess {
+                    authUser?.accessToken = it.accessToken
+                    dialogOpen = false
+                    alertDialogOpen = false
+                    updateCount {
+                        updateCards()
+                    }
                 }
             }
+
         } else {
-            putCard(
-                card.id,
-                EditTouchCard(card.name, card.enabled),
-                authUser!!
-            ) {
-                dialogOpen = false
-                alertDialogOpen = false
-                updateCount {
-                    updateCards()
+            MainScope().launch {
+                putCard(
+                    card.id,
+                    EditTouchCard(card.name, card.enabled),
+                    authUser!!
+                ).onSuccess {
+                    authUser?.accessToken = it.accessToken
+                    dialogOpen = false
+                    alertDialogOpen = false
+                    updateCount {
+                        updateCards()
+                    }
                 }
             }
         }
     }
 
     fun onClickDelete(card: TouchCard?) {
-        if(card == null || authUser == null) {
+        if (card == null || authUser == null) {
             dialogOpen = false
             alertDialogOpen = false
             return
         }
-        deleteCard(card.id, authUser!!) {
-            dialogOpen = false
-            alertDialogOpen = false
-            updateCount {
-                updateCards()
+        MainScope().launch {
+            deleteCard(card.id, authUser!!).onSuccess {
+                authUser?.accessToken = it.accessToken
+                dialogOpen = false
+                alertDialogOpen = false
+                updateCount {
+                    updateCards()
+                }
             }
         }
     }
@@ -203,7 +218,7 @@ val CardList = FC<Props> {
                 TableCell {
                     +"Name"
                 }
-                if(!isXsSize)
+                if (!isXsSize)
                     TableCell {
                         +"Card ID"
                     }
@@ -255,7 +270,7 @@ val CardList = FC<Props> {
     }
 
     fun getCardInfo(): TouchCard? {
-        if(editIsAddMode) {
+        if (editIsAddMode) {
             return TouchCard(
                 -1,
                 editCardName,
@@ -280,7 +295,7 @@ val CardList = FC<Props> {
             onDialogClose(null)
         }
         DialogTitle {
-            +if(editIsAddMode) "Add info" else "Edit info"
+            +if (editIsAddMode) "Add info" else "Edit info"
         }
 
         DialogContent {
@@ -339,7 +354,7 @@ val CardList = FC<Props> {
                     flexGrow = number(1.0)
                 }
             }
-            if(!editIsAddMode)
+            if (!editIsAddMode)
                 Button {
                     onClick = {
                         alertDialogOpen = true
@@ -353,7 +368,7 @@ val CardList = FC<Props> {
                     onDialogClose(getCardInfo())
                 }
                 variant = ButtonVariant.contained
-                +if(editIsAddMode) "Add" else "Apply"
+                +if (editIsAddMode) "Add" else "Apply"
             }
         }
     }

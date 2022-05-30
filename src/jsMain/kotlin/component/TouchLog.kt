@@ -6,6 +6,8 @@ import util.CardIdType
 import ThemeContext
 import com.n0n5ense.model.json.CardTouchLog
 import csstype.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import util.getTouchLog
 import util.getTouchLogCount
 import mui.icons.material.Block
@@ -25,7 +27,7 @@ import react.router.dom.NavLink
 import util.value
 import kotlin.js.Date
 
-private interface TouchLogRowProps: Props {
+private interface TouchLogRowProps : Props {
     var name: String?
     var cardId: String
     var time: String
@@ -38,7 +40,7 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
     val cardId = CardId.determineType(props.cardId)
     Fragment {
         TableRow {
-            if(props.isXsSize)
+            if (props.isXsSize)
                 TableCell {
                     sx {
                         borderBottom = 0.px
@@ -48,15 +50,15 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                         size = Size.small
                         ariaLabel = "expand row"
                         onClick = { open = !open }
-                        +(if(open) KeyboardArrowUp else KeyboardArrowDown).create()
+                        +(if (open) KeyboardArrowUp else KeyboardArrowDown).create()
                     }
                 }
             TableCell {
-                if(props.isXsSize)
+                if (props.isXsSize)
                     sx {
                         borderBottom = 0.px
                     }
-                if(props.name != null)
+                if (props.name != null)
                     +(props.name)!!
                 else
                     NavLink {
@@ -64,9 +66,9 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                         +"Add this"
                     }
             }
-            if(!props.isXsSize)
+            if (!props.isXsSize)
                 TableCell {
-                    if(props.isXsSize)
+                    if (props.isXsSize)
                         sx {
                             borderBottom = 0.px
                         }
@@ -75,7 +77,7 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                             display = Display.flex
                             alignItems = AlignItems.center
                         }
-                        if(cardId.type == CardIdType.GunmaUniv) {
+                        if (cardId.type == CardIdType.GunmaUniv) {
                             img {
                                 src = "static/gunma_logo.png"
                                 css {
@@ -89,24 +91,24 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                     }
                 }
             TableCell {
-                if(props.isXsSize)
+                if (props.isXsSize)
                     sx {
                         borderBottom = 0.px
                     }
                 +(props.time)
             }
             TableCell {
-                if(props.isXsSize)
+                if (props.isXsSize)
                     sx {
                         borderBottom = 0.px
                     }
-                if(props.accept)
+                if (props.accept)
                     Check { color = SvgIconColor.success }
                 else
                     Block { color = SvgIconColor.error }
             }
         }
-        if(props.isXsSize)
+        if (props.isXsSize)
             TableRow {
                 TableCell {
                     sx {
@@ -133,7 +135,7 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                                     display = Display.flex
                                     alignItems = AlignItems.center
                                 }
-                                if(cardId.type == CardIdType.GunmaUniv) {
+                                if (cardId.type == CardIdType.GunmaUniv) {
                                     img {
                                         src = "static/gunma_logo.png"
                                         css {
@@ -165,24 +167,27 @@ val TouchLog = FC<Props> { _ ->
     })
 
     fun updateLog(p: Int? = null, w: Int? = null) {
-        getTouchLog(p ?: page, w ?: width, authUser!!) { result ->
-            result.onSuccess {
-                logs = it.data
-                authUser?.accessToken = it.accessToken
-            }
+        MainScope().launch {
+            getTouchLog(p ?: page, w ?: width, authUser!!)
+                .onSuccess {
+                    logs = it.data
+                    authUser?.accessToken = it.accessToken
+                }
         }
     }
 
 
     fun updateCount(callback: ((Result<Long>) -> Unit)? = null) {
-        getTouchLogCount(authUser!!) { result ->
-            result.onSuccess {
-                count = it.data.count
-                authUser?.accessToken = it.accessToken
-                callback?.invoke(Result.success(it.data.count))
-            }.onFailure {
-                callback?.invoke(Result.failure(it))
-            }
+        MainScope().launch {
+            getTouchLogCount(authUser!!)
+                .onSuccess {
+                    count = it.data.count
+                    authUser?.accessToken = it.accessToken
+                }.map {
+                    it.data.count
+                }.let {
+                    callback?.invoke(it)
+                }
         }
     }
 
@@ -195,7 +200,7 @@ val TouchLog = FC<Props> { _ ->
     TableContainer {
         Table {
             TableHead {
-                if(isXsSize)
+                if (isXsSize)
                     TableCell { }
                 TableCell {
                     +"Name"
@@ -203,7 +208,7 @@ val TouchLog = FC<Props> { _ ->
                         minWidth = 10.ex
                     }
                 }
-                if(!isXsSize)
+                if (!isXsSize)
                     TableCell {
                         +"Card ID"
                         sx {
@@ -224,7 +229,7 @@ val TouchLog = FC<Props> { _ ->
                         name = log.name
                         cardId = log.cardId
                         val date = Date(log.time).let { d ->
-                            Date(d.getTime() - d.getTimezoneOffset()*60000)
+                            Date(d.getTime() - d.getTimezoneOffset() * 60000)
                         }
                         time = date.toLocaleString("ja-JP")
                         accept = log.accept

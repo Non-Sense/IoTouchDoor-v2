@@ -1,16 +1,17 @@
 package component
 
 import AuthUserContext
+import ThemeContext
 import com.n0n5ense.model.json.CardTouchLog
 import com.n0n5ense.model.json.DoorLog
-import csstype.JustifyContent
-import csstype.number
-import csstype.px
+import com.n0n5ense.model.json.DoorStatus
+import csstype.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.js.timers.setInterval
-import mui.icons.material.Block
-import mui.icons.material.Check
-import mui.icons.material.Sync
+import mui.icons.material.*
 import mui.material.*
+import mui.material.Size
 import mui.system.ResponsiveStyleValue
 import mui.system.sx
 import react.*
@@ -18,6 +19,7 @@ import react.css.css
 import react.dom.aria.ariaLabel
 import react.dom.html.ReactHTML
 import react.router.dom.NavLink
+import util.getDoorStatus
 import util.getPhysicalLog
 import util.getTouchLog
 import util.toSortDatetimeString
@@ -38,19 +40,22 @@ val DashBoard = FC<Props> {
 
     val authUser by useContext(AuthUserContext)
     var touchLog by useState<List<CardTouchLog>>(listOf())
+    var doorStatus by useState(DoorStatus(false, false, false))
     var physicalLog by useState<List<DoorLog>>(listOf())
 
     fun fetch() {
-        getTouchLog(0,5,authUser!!) { result ->
-            result.onSuccess {
+        MainScope().launch {
+            getTouchLog(0, 5, authUser!!).onSuccess {
                 authUser?.accessToken = it.accessToken
                 touchLog = it.data
-                getPhysicalLog(0,5,authUser!!) { result2 ->
-                    result2.onSuccess { d2 ->
-                        authUser?.accessToken = d2.accessToken
-                        physicalLog = d2.data
-                    }
-                }
+            }
+            getPhysicalLog(0, 5, authUser!!).onSuccess {
+                authUser?.accessToken = it.accessToken
+                physicalLog = it.data
+            }
+            getDoorStatus(authUser!!).onSuccess {
+                authUser?.accessToken = it.accessToken
+                doorStatus = it.data
             }
         }
     }
@@ -73,13 +78,13 @@ val DashBoard = FC<Props> {
             xs = 12
             sm = 10
             md = 6
-            MiniTouchLog {
-                this.log = touchLog
+            DoorStatusView {
+                this.status = doorStatus
                 this.onClickRefresh = {
-                    getTouchLog(0, 5, authUser!!) { res ->
-                        res.onSuccess {
+                    MainScope().launch {
+                        getDoorStatus(authUser!!).onSuccess {
                             authUser?.accessToken = it.accessToken
-                            touchLog = it.data
+                            doorStatus = it.data
                         }
                     }
                 }
@@ -90,11 +95,29 @@ val DashBoard = FC<Props> {
             xs = 12
             sm = 10
             md = 6
+            MiniTouchLog {
+                this.log = touchLog
+                this.onClickRefresh = {
+                    MainScope().launch {
+                        getTouchLog(0, 5, authUser!!).onSuccess {
+                            authUser?.accessToken = it.accessToken
+                            touchLog = it.data
+                        }
+                    }
+                }
+
+            }
+        }
+        Grid {
+            item = true
+            xs = 12
+            sm = 10
+            md = 6
             MiniPhysicalLog {
                 this.log = physicalLog
                 this.onClickRefresh = {
-                    getPhysicalLog(0,5,authUser!!) { res ->
-                        res.onSuccess {
+                    MainScope().launch {
+                        getPhysicalLog(0, 5, authUser!!).onSuccess {
                             authUser?.accessToken = it.accessToken
                             physicalLog = it.data
                         }
@@ -106,7 +129,7 @@ val DashBoard = FC<Props> {
 }
 
 
-private interface MiniTouchLogRowProps: Props {
+private interface MiniTouchLogRowProps : Props {
     var name: String?
     var cardId: String
     var time: String
@@ -118,7 +141,7 @@ private interface MiniTouchLogRowProps: Props {
 private val MiniTouchLogRow = FC<MiniTouchLogRowProps> { props ->
     TableRow {
         TableCell {
-            if(props.name != null)
+            if (props.name != null)
                 +(props.name)!!
             else
                 NavLink {
@@ -130,7 +153,7 @@ private val MiniTouchLogRow = FC<MiniTouchLogRowProps> { props ->
             +props.time
         }
         TableCell {
-            if(props.accept)
+            if (props.accept)
                 Check { color = SvgIconColor.success }
             else
                 Block { color = SvgIconColor.error }
@@ -138,9 +161,9 @@ private val MiniTouchLogRow = FC<MiniTouchLogRowProps> { props ->
     }
 }
 
-private interface MiniTouchLogProps: Props {
+private interface MiniTouchLogProps : Props {
     var log: List<CardTouchLog>
-    var onClickRefresh: ()->Unit
+    var onClickRefresh: () -> Unit
 }
 
 private val MiniTouchLog = FC<MiniTouchLogProps> { props ->
@@ -206,7 +229,7 @@ private val MiniTouchLog = FC<MiniTouchLogProps> { props ->
 }
 
 
-private interface MiniPhysicalLogRowProps: Props {
+private interface MiniPhysicalLogRowProps : Props {
     var action: String
     var time: String
 }
@@ -223,9 +246,9 @@ private val MiniPhysicalLogRow = FC<MiniPhysicalLogRowProps> { props ->
     }
 }
 
-private interface MiniPhysicalLogProps: Props {
+private interface MiniPhysicalLogProps : Props {
     var log: List<DoorLog>
-    var onClickRefresh: ()->Unit
+    var onClickRefresh: () -> Unit
 }
 
 private val MiniPhysicalLog = FC<MiniPhysicalLogProps> { props ->
@@ -279,6 +302,109 @@ private val MiniPhysicalLog = FC<MiniPhysicalLogProps> { props ->
                 }
                 to = "/physicallog"
                 +"View more"
+            }
+        }
+    }
+}
+
+private interface DoorStatusProps : Props {
+    var status: DoorStatus
+    var onClickRefresh: () -> Unit
+}
+
+private val DoorStatusView = FC<DoorStatusProps> { props ->
+    val theme by useContext(ThemeContext)
+    Card {
+        sx {
+            val isIllegalState = props.status.active || !props.status.isLock || !props.status.isClose
+            backgroundColor = when {
+                theme == Themes.Light && !isIllegalState -> "#ddf2f2"
+                theme == Themes.Dark && !isIllegalState -> "#003232"
+                theme == Themes.Light && isIllegalState -> "#f2f2dd"
+                theme == Themes.Dark && isIllegalState -> "#323200"
+                else -> "#f2f2dd"
+            }.let { Color(it) }
+        }
+        CardHeader {
+            sx {
+                paddingBottom = 0.px
+            }
+            title = ReactNode("Door Status")
+        }
+        CardContent {
+            if (props.status.active) {
+                Toolbar {
+                    sx {
+                        display = Display.flex
+                        alignItems = AlignItems.center
+                    }
+                    if (props.status.isClose) {
+                        DoorFront()
+                        Typography {
+                            variant = "h6"
+                            +"Close"
+                        }
+                    } else {
+                        MeetingRoom()
+                        Typography {
+                            variant = "h6"
+                            +"Open"
+                        }
+                    }
+                }
+                Toolbar {
+                    sx {
+                        display = Display.flex
+                        alignItems = AlignItems.center
+                    }
+                    if (props.status.isLock) {
+                        Lock()
+                        Typography {
+                            variant = "h6"
+                            +"Lock"
+                        }
+                    } else {
+                        LockOpen()
+                        Typography {
+                            variant = "h6"
+                            +"Unlock"
+                        }
+                    }
+                }
+            } else {
+                Toolbar {
+                    sx {
+                        display = Display.flex
+                        alignItems = AlignItems.center
+                    }
+                    QuestionMark()
+                    Typography {
+                        variant = "h6"
+                        +"Unknown"
+                    }
+                }
+                Toolbar {
+                    sx {
+                        display = Display.flex
+                        alignItems = AlignItems.center
+                    }
+                    QuestionMark()
+                    Typography {
+                        variant = "h6"
+                        +"Unknown"
+                    }
+                }
+            }
+        }
+        CardActions {
+            Tooltip {
+                title = ReactNode("Refresh")
+                IconButton {
+                    ariaLabel = "refresh"
+                    size = Size.medium
+                    onClick = { props.onClickRefresh() }
+                    +Sync.create()
+                }
             }
         }
     }
