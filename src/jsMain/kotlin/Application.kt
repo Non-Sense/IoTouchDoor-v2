@@ -7,6 +7,7 @@ import react.router.Navigate
 import react.router.Route
 import react.router.Routes
 import react.router.dom.BrowserRouter
+import react.router.useNavigate
 import react.useState
 
 const val tokenCookieName = "rt"
@@ -31,18 +32,6 @@ val Application = FC<Props> {
                                 to = "/login"
                             }
                         }.create()
-                    }
-
-                    Route {
-                        index = true
-                        element = Welcome.create { name = "kt" }
-                    }
-
-                    Route {
-                        path = "/unk"
-                        element = PrivateElement.create {
-                            Welcome { name = "prii2" }
-                        }
                     }
 
                     Route {
@@ -75,9 +64,8 @@ val Application = FC<Props> {
                         }
                     }
 
-
-
                     Route {
+                        index = true
                         path = "/dashboard"
                         element = PrivateElement.create {
                             WithHeader {

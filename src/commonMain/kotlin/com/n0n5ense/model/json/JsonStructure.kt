@@ -58,3 +58,10 @@ data class TouchCard(
     val enabled: Boolean,
     val owner: String?
 )
+
+@Serializable
+data class ReaderDeviceInfo(
+    val type: String,
+    val enabled: Boolean,
+    val name: String
+)

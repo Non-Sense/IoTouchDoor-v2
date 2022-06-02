@@ -1,6 +1,8 @@
 package com.n0n5ense.door
 
 import com.n0n5ense.model.PhysicalLogAction
+import com.n0n5ense.persistence.TouchCardService
+import com.n0n5ense.persistence.TouchLogService
 
 class DoorService {
     companion object {
@@ -24,5 +26,12 @@ class DoorService {
         }
 
         fun status() = door?.getStatus()
+
+        fun addTouchLog(id: String) {
+            val accept = TouchCardService.find(id)?.enabled == true
+            TouchLogService.add(id, accept)
+            if(accept)
+                unlock()
+        }
     }
 }

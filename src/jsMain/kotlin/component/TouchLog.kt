@@ -1,8 +1,8 @@
 package component
 
 import AuthUserContext
-import util.CardId
-import util.CardIdType
+import CardId
+import CardIdType
 import ThemeContext
 import com.n0n5ense.model.json.CardTouchLog
 import csstype.*

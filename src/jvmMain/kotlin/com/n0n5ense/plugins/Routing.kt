@@ -1,6 +1,7 @@
 package com.n0n5ense.plugins
 
 import com.n0n5ense.door.DoorService
+import com.n0n5ense.felica.FelicaService
 import com.n0n5ense.getPostData
 import com.n0n5ense.index
 import com.n0n5ense.isAdminRole
@@ -25,7 +26,6 @@ private val reactPages = listOf(
     "/",
     "/login",
     "/logout",
-    "/unk",
     "/touchlog",
     "/physicallog",
     "/cards",
@@ -50,10 +50,6 @@ fun Application.configureRouting() {
 
         route("/api") {
 
-            get {
-                call.respondText("Hello World!?")
-            }
-
             get("/testmodel") {
                 call.respond(DoorStatus(true, false, true))
             }
@@ -74,8 +70,11 @@ fun Application.configureRouting() {
             }
 
             authenticate {
-                get("/test") {
-                    call.respond("unkunkunk")
+
+                route("/reader") {
+                    get() {
+                        readerStatus()
+                    }
                 }
 
                 route("/door") {
@@ -260,4 +259,11 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.deleteCard() {
         call.respond(HttpStatusCode.OK)
     else
         call.respond(HttpStatusCode.NotFound)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.readerStatus() {
+    val statusList = mutableListOf<ReaderDeviceInfo>()
+    if(FelicaService.enabled) {
+        statusList.add(FelicaService.getInfo())
+    }
 }
