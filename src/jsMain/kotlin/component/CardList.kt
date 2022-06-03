@@ -21,11 +21,13 @@ import mui.system.Breakpoint
 import mui.system.ResponsiveStyleValue
 import mui.system.Theme
 import mui.system.sx
+import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.url.URLSearchParams
 import util.putCard
 import react.*
 import react.css.css
 import react.dom.aria.ariaLabel
+import react.dom.events.FormEvent
 import react.dom.html.InputType
 import react.dom.html.ReactHTML.div
 import react.dom.onChange
@@ -81,6 +83,7 @@ val CardList = FC<Props> {
     var editCardName by useState("")
     var editEnabled by useState(false)
     var editIsAddMode by useState(false)
+    var editCardType by useState(CardIdType.Felica)
 
     val isXsSize = useMediaQuery<Theme>(queryInput = {
         it.breakpoints.down(Breakpoint.sm)
@@ -179,6 +182,11 @@ val CardList = FC<Props> {
             editEnabled = true
             editIsAddMode = true
             dialogOpen = true
+            query.get("t")?.let {
+                kotlin.runCatching {
+                    editCardType = CardIdType.valueOf(it)
+                }
+            }
         }
     }
 
@@ -276,7 +284,8 @@ val CardList = FC<Props> {
                 editCardName,
                 editCardId,
                 editEnabled,
-                null
+                null,
+                editCardType
             )
         }
         dialogCardInfo ?: return null
@@ -285,7 +294,8 @@ val CardList = FC<Props> {
             editCardName,
             editCardId,
             editEnabled,
-            dialogCardInfo!!.owner
+            dialogCardInfo!!.owner,
+            editCardType
         )
     }
 
@@ -304,6 +314,7 @@ val CardList = FC<Props> {
                 direction = ResponsiveStyleValue(StackDirection.column)
                 spacing = ResponsiveStyleValue(3)
                 fullWidth = true
+
                 TextField {
                     id = "cardId"
                     disabled = editCardIdDisable
@@ -326,6 +337,29 @@ val CardList = FC<Props> {
                     fullWidth = true
                     onChange = {
                         editCardName = it.target.value
+                    }
+                }
+
+
+                FormControl {
+                    InputLabel {
+                        id = "cardTypeSelectLabel"
+                        +"Card Type"
+                    }
+                    Select {
+                        id = "cardTypeSelect"
+                        labelId = "cardTypeSelectLabel"
+                        label = ReactNode("Card Type")
+                        value = editCardType.unsafeCast<Nothing?>()
+                        this.onChange = { ev: FormEvent<HTMLDivElement> ->
+                            editCardType = CardIdType.valueOf(ev.target.value)
+                        }
+                        CardIdType.values().filter { it != CardIdType.Unknown }.forEach {
+                            MenuItem {
+                                value = it.name
+                                +it.name
+                            }
+                        }
                     }
                 }
 

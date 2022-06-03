@@ -28,7 +28,8 @@ class DoorService {
         fun status() = door?.getStatus()
 
         fun addTouchLog(id: String) {
-            val accept = TouchCardService.find(id)?.enabled == true
+            val cardId = CardId.determineType(id)
+            val accept = TouchCardService.find(cardId.id)?.enabled == true
             TouchLogService.add(id, accept)
             if(accept)
                 unlock()

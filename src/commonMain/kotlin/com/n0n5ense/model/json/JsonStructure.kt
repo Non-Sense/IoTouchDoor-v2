@@ -1,5 +1,6 @@
 package com.n0n5ense.model.json
 
+import CardIdType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -56,7 +57,8 @@ data class TouchCard(
     val name: String,
     val cardId: String,
     val enabled: Boolean,
-    val owner: String?
+    val owner: String?,
+    val type: CardIdType
 )
 
 @Serializable

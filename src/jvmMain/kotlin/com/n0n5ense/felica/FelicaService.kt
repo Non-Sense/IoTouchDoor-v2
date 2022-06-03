@@ -33,12 +33,12 @@ class FelicaService {
         fun getInfo(): ReaderDeviceInfo {
             val name = felicaReader?.let {
                 "${it.manufacturer ?: ""} ${it.productName ?: ""} ${it.firmwareVersion ?: ""}"
-            }?:""
-                return ReaderDeviceInfo(
-                    "Felica",
-                )
-            }
-
+            } ?: ""
+            return ReaderDeviceInfo(
+                "Felica",
+                enabled,
+                name
+            )
         }
 
         private fun onError(throwable: Throwable) {

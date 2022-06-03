@@ -19,7 +19,8 @@ class TouchCardService {
                 entity.name,
                 entity.cardId,
                 entity.enabled,
-                entity.owner?.value
+                entity.owner?.value,
+                kotlin.runCatching { CardIdType.valueOf(entity.cardType) }.getOrDefault(CardIdType.Unknown)
             )
         }
 
@@ -36,6 +37,7 @@ class TouchCardService {
                     this.name = newTouchCard.name
                     this.enabled = newTouchCard.enabled
                     this.owner = newTouchCard.owner?.let { EntityID(it, UserTable) }
+                    this.cardType = newTouchCard.cardId
                 }
             }
         }

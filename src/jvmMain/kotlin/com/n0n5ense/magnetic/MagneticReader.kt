@@ -59,7 +59,7 @@ class MagneticReader {
         }
 
         fun getInfo(): ReaderDeviceInfo? {
-            return devicePath?.let { ReaderDeviceInfo("Magnetic", it) }
+            return devicePath?.let { ReaderDeviceInfo("Magnetic", enabled, it) }
         }
 
         private fun startJob() {

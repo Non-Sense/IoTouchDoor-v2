@@ -62,7 +62,7 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                     +(props.name)!!
                 else
                     NavLink {
-                        to = "/cards?i=${props.cardId}"
+                        to = "/cards?i=${cardId.id}&t=${cardId.type.name}"
                         +"Add this"
                     }
             }
