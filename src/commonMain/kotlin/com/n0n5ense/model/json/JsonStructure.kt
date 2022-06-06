@@ -64,6 +64,6 @@ data class TouchCard(
 @Serializable
 data class ReaderDeviceInfo(
     val type: String,
-    val enabled: Boolean,
+    val connected: Boolean,
     val name: String
 )

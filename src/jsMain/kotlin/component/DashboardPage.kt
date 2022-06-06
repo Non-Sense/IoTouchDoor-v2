@@ -5,6 +5,7 @@ import ThemeContext
 import com.n0n5ense.model.json.CardTouchLog
 import com.n0n5ense.model.json.DoorLog
 import com.n0n5ense.model.json.DoorStatus
+import com.n0n5ense.model.json.ReaderDeviceInfo
 import csstype.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -13,16 +14,14 @@ import mui.icons.material.*
 import mui.material.*
 import mui.material.Size
 import mui.system.ResponsiveStyleValue
+import mui.system.Theme
 import mui.system.sx
 import react.*
 import react.css.css
 import react.dom.aria.ariaLabel
 import react.dom.html.ReactHTML
 import react.router.dom.NavLink
-import util.getDoorStatus
-import util.getPhysicalLog
-import util.getTouchLog
-import util.toSortDatetimeString
+import util.*
 import kotlin.time.Duration.Companion.milliseconds
 
 private val dashboardFetchInterval = 5000.milliseconds
@@ -41,6 +40,7 @@ val DashBoard = FC<Props> {
     val authUser by useContext(AuthUserContext)
     var touchLog by useState<List<CardTouchLog>>(listOf())
     var doorStatus by useState(DoorStatus(false, false, false))
+    var readerStatus by useState<List<ReaderDeviceInfo>>(listOf())
     var physicalLog by useState<List<DoorLog>>(listOf())
 
     fun fetch() {
@@ -57,6 +57,10 @@ val DashBoard = FC<Props> {
                 authUser?.accessToken = it.accessToken
                 doorStatus = it.data
             }
+            getReaderStatus(authUser!!).onSuccess {
+                authUser?.accessToken = it.accessToken
+                readerStatus = it.data
+            }
         }
     }
 
@@ -72,6 +76,23 @@ val DashBoard = FC<Props> {
         spacing = ResponsiveStyleValue(4)
         sx {
             justifyContent = JustifyContent.center
+        }
+        Grid {
+            item = true
+            xs = 12
+            sm = 10
+            md = 6
+            ReaderStatusView {
+                this.list = readerStatus
+                this.onClickRefresh = {
+                    MainScope().launch {
+                        getReaderStatus(authUser!!).onSuccess {
+                            authUser?.accessToken = it.accessToken
+                            readerStatus = it.data
+                        }
+                    }
+                }
+            }
         }
         Grid {
             item = true
@@ -139,13 +160,14 @@ private interface MiniTouchLogRowProps : Props {
 
 
 private val MiniTouchLogRow = FC<MiniTouchLogRowProps> { props ->
+    val cardId = CardId.determineType(props.cardId)
     TableRow {
         TableCell {
             if (props.name != null)
                 +(props.name)!!
             else
                 NavLink {
-                    to = "/cards?i=${props.cardId}"
+                    to = "/cards?i=${cardId.id}&t=${cardId.type.name}"
                     +"Add this"
                 }
         }
@@ -317,13 +339,7 @@ private val DoorStatusView = FC<DoorStatusProps> { props ->
     Card {
         sx {
             val isIllegalState = props.status.active || !props.status.isLock || !props.status.isClose
-            backgroundColor = when {
-                theme == Themes.Light && !isIllegalState -> "#ddf2f2"
-                theme == Themes.Dark && !isIllegalState -> "#003232"
-                theme == Themes.Light && isIllegalState -> "#f2f2dd"
-                theme == Themes.Dark && isIllegalState -> "#323200"
-                else -> "#f2f2dd"
-            }.let { Color(it) }
+            backgroundColor = backgroundColorPicker(theme, isIllegalState)
         }
         CardHeader {
             sx {
@@ -408,4 +424,74 @@ private val DoorStatusView = FC<DoorStatusProps> { props ->
             }
         }
     }
+}
+
+private interface ReaderStatusViewProps : Props {
+    var list: List<ReaderDeviceInfo>
+    var onClickRefresh: () -> Unit
+}
+
+private val ReaderStatusView = FC<ReaderStatusViewProps> { props ->
+    Card {
+        val theme by useContext(ThemeContext)
+        sx {
+            val isIllegalState = props.list.find { !it.connected } != null || props.list.isEmpty()
+            backgroundColor = backgroundColorPicker(theme, isIllegalState)
+        }
+        CardHeader {
+            sx {
+                paddingBottom = 0.px
+            }
+            title = ReactNode("Reader Status")
+        }
+        CardContent {
+            if(props.list.isEmpty()){
+                +"Not Configured"
+            } else {
+                Table {
+                    TableHead {
+                        TableCell {
+                            +"Type"
+                        }
+                        TableCell {
+                            +"Status"
+                        }
+                    }
+                    TableBody {
+                        props.list.forEach { readerInfo ->
+                            TableRow {
+                                TableCell {
+                                    +readerInfo.type
+                                }
+                                TableCell {
+                                    +if(readerInfo.connected) readerInfo.name else "Not Connected"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        CardActions {
+            Tooltip {
+                title = ReactNode("Refresh")
+                IconButton {
+                    ariaLabel = "refresh"
+                    size = Size.medium
+                    onClick = { props.onClickRefresh() }
+                    +Sync.create()
+                }
+            }
+        }
+    }
+}
+
+private fun backgroundColorPicker(theme: Theme, isIllegalState: Boolean): Color {
+    return when {
+        theme == Themes.Light && !isIllegalState -> "#ddf2f2"
+        theme == Themes.Dark && !isIllegalState -> "#003232"
+        theme == Themes.Light && isIllegalState -> "#f2f2dd"
+        theme == Themes.Dark && isIllegalState -> "#191900"
+        else -> "#f2f2dd"
+    }.let { Color(it) }
 }

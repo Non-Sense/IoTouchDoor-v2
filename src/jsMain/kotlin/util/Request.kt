@@ -30,6 +30,9 @@ suspend fun getDoorStatus(authUser: AuthUser): Result<DataWithAccessToken<DoorSt
     return getJsonDataWithTokenRetry("$serverAddress/api/door", authUser)
 }
 
+suspend fun getReaderStatus(authUser: AuthUser): Result<DataWithAccessToken<List<ReaderDeviceInfo>>> {
+    return getJsonDataWithTokenRetry("$serverAddress/api/reader", authUser)
+}
 
 suspend fun getTouchLog(
     page: Int,

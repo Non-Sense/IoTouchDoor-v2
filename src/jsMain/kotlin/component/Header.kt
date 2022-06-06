@@ -3,10 +3,9 @@ package component
 import ThemeContext
 import Themes
 import csstype.*
-import mui.icons.material.Brightness4
-import mui.icons.material.Brightness7
-import mui.icons.material.Logout
+import mui.icons.material.*
 import mui.material.*
+import mui.material.List
 import mui.system.Breakpoint
 import mui.system.Theme
 import mui.system.sx
@@ -18,21 +17,22 @@ import react.router.dom.NavLink
 import react.router.useLocation
 import react.router.useNavigate
 
-val sideBarWidth = 160.px
+val sideBarWidth = 180.px
 val headerHeight = 64.px
 
 data class PageInfo(
     val path: String,
-    val name: String
+    val name: String,
+    val icon: SvgIconComponent
 )
 
 fun usePages(): List<PageInfo> {
     return useMemo {
         listOf(
-            PageInfo("/dashboard", "Dashboard"),
-            PageInfo("/touchlog", "Touch log"),
-            PageInfo("/physicallog", "Physical log"),
-            PageInfo("/cards", "Cards")
+            PageInfo("/dashboard", "Dashboard", Dashboard),
+            PageInfo("/touchlog", "Touch log", Dvr),
+            PageInfo("/physicallog", "Physical log", FitnessCenter),
+            PageInfo("/cards", "Cards", CreditCard)
         )
     }
 }
@@ -146,6 +146,9 @@ val Header = FC<HeaderName> {
                                 to = page.path
                                 ListItemButton {
                                     selected = lastPathname == page.path
+                                    ListItemIcon {
+                                        page.icon()
+                                    }
                                     ListItemText {
                                         primary = ReactNode(page.name)
                                     }
@@ -184,7 +187,9 @@ val Header = FC<HeaderName> {
 
                                 ListItemButton {
                                     selected = lastPathname == page.path
-
+                                    ListItemIcon {
+                                        page.icon()
+                                    }
                                     ListItemText {
                                         primary = ReactNode(page.name)
                                     }

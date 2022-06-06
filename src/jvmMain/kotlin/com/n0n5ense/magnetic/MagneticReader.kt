@@ -28,16 +28,15 @@ class MagneticReader {
         var enabled = false
         var onError: ((Throwable) -> Unit)? = null
 
-        fun open(path: String) {
+        fun open(path: String): Result<Unit> {
             devicePath = path
-            kotlin.runCatching {
+            return kotlin.runCatching {
                 input = BufferedInputStream(FileInputStream(path))
                 reader = MagReader()
                 reader?.onInputEnterCallback = Companion::onEnter
                 startJob()
             }.onFailure {
                 close()
-                return
             }
         }
 
@@ -58,8 +57,8 @@ class MagneticReader {
             reader = null
         }
 
-        fun getInfo(): ReaderDeviceInfo? {
-            return devicePath?.let { ReaderDeviceInfo("Magnetic", enabled, it) }
+        fun getInfo(): ReaderDeviceInfo {
+            return ReaderDeviceInfo("Magnetic", devicePath!=null, devicePath?:"")
         }
 
         private fun startJob() {

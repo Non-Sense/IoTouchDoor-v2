@@ -15,12 +15,14 @@ class FelicaService {
             return felicaReader != null
         }
 
-        fun open() {
-            close()
-            felicaReader = FelicaReader()
-            felicaReader?.onTouch = ::onCardTouch
-            felicaReader?.onError = ::onError
-            felicaReader?.open()
+        fun open(): Result<Unit> {
+            return kotlin.runCatching {
+                close()
+                felicaReader = FelicaReader()
+                felicaReader!!.onTouch = ::onCardTouch
+                felicaReader!!.onError = ::onError
+                felicaReader!!.open().getOrThrow()
+            }.onFailure { felicaReader = null }
         }
 
         fun close() {
@@ -36,7 +38,7 @@ class FelicaService {
             } ?: ""
             return ReaderDeviceInfo(
                 "Felica",
-                enabled,
+                felicaReader != null,
                 name
             )
         }

@@ -14,6 +14,10 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 
@@ -36,6 +40,34 @@ fun Application.module() {
     }
 }
 
+private fun openFelicaReader() {
+    CoroutineScope(Dispatchers.Default).launch {
+        while(true) {
+            val result = FelicaService.open()
+            if(result.isSuccess)
+                break
+            delay(1000)
+        }
+        FelicaService.onError = {
+            FelicaService.open()
+        }
+    }
+}
+
+private fun openMagneticReader(path: String) {
+    CoroutineScope(Dispatchers.Default).launch {
+        while(true) {
+            val result = MagneticReader.open(path)
+            if(result.isSuccess)
+                break
+            delay(1000)
+        }
+        MagneticReader.onError = {
+            MagneticReader.open(path)
+        }
+    }
+}
+
 private fun init(environment: ApplicationEnvironment) {
     Database.connect(environment.config.property("database.path").getString(), "org.sqlite.JDBC")
     databaseInit()
@@ -43,27 +75,13 @@ private fun init(environment: ApplicationEnvironment) {
     DoorService.init(DoorByGpio(environment.config))
     DoorService.onActionCallback = { PhysicalLogService.add(it) }
 
-    if (environment.config.property("feature.felica").getString().toBoolean()) {
-        FelicaService.enabled = true
-        FelicaService.onError = {
-            environment.log.error(it.stackTraceToString())
-            FelicaService.open()
-        }
-        FelicaService.open()
-    } else {
-        FelicaService.enabled = false
-    }
+    FelicaService.enabled = environment.config.property("feature.felica").getString().toBoolean()
+    if(FelicaService.enabled)
+        openFelicaReader()
 
-    if (environment.config.property("feature.magnetic").getString().toBoolean()) {
-        MagneticReader.enabled = true
-        MagneticReader.onError = {
-            environment.log.error(it.stackTraceToString())
-            MagneticReader.open(environment.config.property("feature.magneticReaderPath").getString())
-        }
-        MagneticReader.open(environment.config.property("feature.magneticReaderPath").getString())
-    } else {
-        MagneticReader.enabled = false
-    }
+    MagneticReader.enabled = environment.config.property("feature.magnetic").getString().toBoolean()
+    if(MagneticReader.enabled)
+        openMagneticReader(environment.config.property("feature.magneticReaderPath").getString())
 
 }
 

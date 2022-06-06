@@ -5,6 +5,7 @@ import com.n0n5ense.felica.FelicaService
 import com.n0n5ense.getPostData
 import com.n0n5ense.index
 import com.n0n5ense.isAdminRole
+import com.n0n5ense.magnetic.MagneticReader
 import com.n0n5ense.model.json.*
 import com.n0n5ense.persistence.PhysicalLogService
 import com.n0n5ense.persistence.TouchCardService
@@ -49,11 +50,6 @@ fun Application.configureRouting() {
         }
 
         route("/api") {
-
-            get("/testmodel") {
-                call.respond(DoorStatus(true, false, true))
-            }
-
 
             route("/user") {
                 post<RegisterUser>("/register") {
@@ -266,4 +262,8 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.readerStatus() {
     if(FelicaService.enabled) {
         statusList.add(FelicaService.getInfo())
     }
+    if(MagneticReader.enabled) {
+        statusList.add(MagneticReader.getInfo())
+    }
+    call.respond(statusList)
 }

@@ -72,22 +72,8 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                         sx {
                             borderBottom = 0.px
                         }
-                    Box {
-                        sx {
-                            display = Display.flex
-                            alignItems = AlignItems.center
-                        }
-                        if (cardId.type == CardIdType.GunmaUniv) {
-                            img {
-                                src = "static/gunma_logo.png"
-                                css {
-                                    height = 1.rem
-                                    width = 1.rem
-                                    marginRight = 3.px
-                                }
-                            }
-                        }
-                        +cardId.id
+                    CardIdDisplayBox {
+                        this.cardId = cardId
                     }
                 }
             TableCell {
@@ -130,22 +116,8 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                                     +"Card ID: "
                                 }
                             }
-                            Box {
-                                sx {
-                                    display = Display.flex
-                                    alignItems = AlignItems.center
-                                }
-                                if (cardId.type == CardIdType.GunmaUniv) {
-                                    img {
-                                        src = "static/gunma_logo.png"
-                                        css {
-                                            height = 1.rem
-                                            width = 1.rem
-                                            marginRight = 3.px
-                                        }
-                                    }
-                                }
-                                +cardId.id
+                            CardIdDisplayBox {
+                                this.cardId = cardId
                             }
                         }
                     }

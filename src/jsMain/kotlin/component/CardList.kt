@@ -340,6 +340,16 @@ val CardList = FC<Props> {
                     }
                 }
 
+                FormControlLabel {
+                    control = Switch.create {
+                        checked = editEnabled
+                        ariaLabel = "Enable"
+                        onChange = { _, checked ->
+                            editEnabled = checked
+                        }
+                    }
+                    label = ReactNode("Enable")
+                }
 
                 FormControl {
                     InputLabel {
@@ -361,17 +371,6 @@ val CardList = FC<Props> {
                             }
                         }
                     }
-                }
-
-                FormControlLabel {
-                    control = Switch.create {
-                        checked = editEnabled
-                        ariaLabel = "Enable"
-                        onChange = { _, checked ->
-                            editEnabled = checked
-                        }
-                    }
-                    label = ReactNode("Enable")
                 }
             }
         }
