@@ -1,14 +1,11 @@
 import component.*
 import cookie.Cookies
-import react.FC
-import react.Props
-import react.create
+import react.*
 import react.router.Navigate
 import react.router.Route
 import react.router.Routes
 import react.router.dom.BrowserRouter
 import react.router.useNavigate
-import react.useState
 
 const val tokenCookieName = "rt"
 
@@ -65,7 +62,6 @@ val Application = FC<Props> {
                     }
 
                     Route {
-                        index = true
                         path = "/dashboard"
                         element = PrivateElement.create {
                             WithHeader {
@@ -73,6 +69,16 @@ val Application = FC<Props> {
                                 DashboardPage()
                             }
                         }
+                    }
+
+                    Route {
+                        index = true
+                        path = "/"
+                        element = FC<Props> {
+                            Navigate {
+                                to = "/dashboard"
+                            }
+                        }.create()
                     }
                 }
             }

@@ -40,12 +40,15 @@ fun Application.module() {
     }
 }
 
-private fun openFelicaReader() {
+private fun openFelicaReader(environment: ApplicationEnvironment) {
     CoroutineScope(Dispatchers.Default).launch {
         while(true) {
             val result = FelicaService.open()
             if(result.isSuccess)
                 break
+            result.onFailure {
+                environment.log.error(it.stackTraceToString())
+            }
             delay(1000)
         }
         FelicaService.onError = {
@@ -72,12 +75,12 @@ private fun init(environment: ApplicationEnvironment) {
     Database.connect(environment.config.property("database.path").getString(), "org.sqlite.JDBC")
     databaseInit()
 
-    DoorService.init(DoorByGpio(environment.config))
+    DoorService.init(DoorByGpio(environment.config, environment))
     DoorService.onActionCallback = { PhysicalLogService.add(it) }
 
     FelicaService.enabled = environment.config.property("feature.felica").getString().toBoolean()
     if(FelicaService.enabled)
-        openFelicaReader()
+        openFelicaReader(environment)
 
     MagneticReader.enabled = environment.config.property("feature.magnetic").getString().toBoolean()
     if(MagneticReader.enabled)

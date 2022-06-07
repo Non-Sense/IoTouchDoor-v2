@@ -7,20 +7,12 @@ import com.pi4j.io.gpio.digital.DigitalState
 import com.pi4j.io.gpio.digital.DigitalStateChangeListener
 import com.pi4j.io.pwm.Pwm
 import com.pi4j.io.pwm.PwmType
-import com.pi4j.plugin.mock.platform.MockPlatform
-import com.pi4j.plugin.mock.provider.gpio.analog.MockAnalogInputProvider
-import com.pi4j.plugin.mock.provider.gpio.analog.MockAnalogOutputProvider
-import com.pi4j.plugin.mock.provider.gpio.digital.MockDigitalInputProvider
-import com.pi4j.plugin.mock.provider.gpio.digital.MockDigitalOutputProvider
-import com.pi4j.plugin.mock.provider.i2c.MockI2CProvider
-import com.pi4j.plugin.mock.provider.pwm.MockPwmProvider
-import com.pi4j.plugin.mock.provider.serial.MockSerialProvider
-import com.pi4j.plugin.mock.provider.spi.MockSpiProvider
+import io.ktor.server.application.*
 import io.ktor.server.config.*
 import kotlinx.coroutines.*
 import kotlin.time.Duration.Companion.milliseconds
 
-class DoorByGpio(config: ApplicationConfig): Door() {
+class DoorByGpio(config: ApplicationConfig, private val environment: ApplicationEnvironment): Door(environment) {
 
     private val servoPort = config.property("gpio.servoPort").getString().toInt()
     private val servoSensorPort = config.property("gpio.servoSenorPort").getString().toInt()
@@ -33,25 +25,7 @@ class DoorByGpio(config: ApplicationConfig): Door() {
     private val servoUnlockPosition = config.property("gpio.servoUnlockPosition").getString().toFloat()
     private val servoWaitTime = config.property("gpio.servoMoveWaitTimeMilli").getString().toInt()
 
-    private val isMock = config.property("gpio.mock").getString().toBoolean()
-
-    private val mockContext by lazy {
-        Pi4J.newContextBuilder()
-            .add(MockPlatform())
-            .add(
-                MockAnalogInputProvider.newInstance(),
-                MockAnalogOutputProvider.newInstance(),
-                MockSpiProvider.newInstance(),
-                MockPwmProvider.newInstance(),
-                MockSerialProvider.newInstance(),
-                MockI2CProvider.newInstance(),
-                MockDigitalInputProvider.newInstance(),
-                MockDigitalOutputProvider.newInstance()
-            )
-            .build()
-    }
-
-    private val pi4jContext = if(isMock) mockContext else Pi4J.newAutoContext()
+    private val pi4jContext = Pi4J.newAutoContext()
     private val pwm: Pwm = pi4jContext.create(
         Pwm.newConfigBuilder(pi4jContext)
             .id("BCM$servoPort")

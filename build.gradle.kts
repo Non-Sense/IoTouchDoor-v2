@@ -8,6 +8,7 @@ val exposedVersion: String by project
 plugins {
     kotlin("multiplatform") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
     application
 }
 
@@ -79,9 +80,9 @@ kotlin {
                 runtimeOnly("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
 
                 implementation("com.pi4j:pi4j-core:2.1.1")
-                implementation("com.pi4j:pi4j-plugin-raspberrypi:2.1.1")
+//                implementation("com.pi4j:pi4j-plugin-raspberrypi:2.1.1")
                 implementation("com.pi4j:pi4j-plugin-pigpio:2.1.1")
-                implementation("com.pi4j:pi4j-plugin-mock:2.1.1")
+//                implementation("com.pi4j:pi4j-plugin-mock:2.1.1")
 
                 implementation("org.usb4java:usb4java:1.3.0")
                 implementation("org.usb4java:usb4java-javax:1.3.0")
@@ -109,7 +110,6 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
                 implementation(npm("js-cookie","3.0.1"))
-//                implementation(npm("react-admin", "4.0.4"))
             }
         }
     }
@@ -142,3 +142,17 @@ tasks.getByName<Jar>("jvmJar") {
     dependsOn(webpackTask) // make sure JS gets compiled first
     from(File(webpackTask.destinationDirectory, webpackTask.outputFileName)) // bring output file along into the JAR
 }
+
+val shadowJar = tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    mergeServiceFiles()
+}
+
+//tasks.jar {
+//    manifest {
+//        attributes["Main-Class"] = "com.n0n5ense.ApplicationKt"
+//    }
+//    configurations["compileClasspath"].forEach { file: File ->
+//        from(zipTree(file.absoluteFile))
+//    }
+//    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+//}

@@ -1,20 +1,19 @@
 package com.n0n5ense.door
 
+import io.ktor.server.application.*
 import kotlinx.coroutines.*
 
 
 data class DoorStatus(val isLock: Boolean, val isClose: Boolean)
 
-abstract class Door {
+abstract class Door(
+    private val environment: ApplicationEnvironment
+) {
 
     companion object {
         private const val AUTO_LOCK_TIME: Long = 1000L*10L
         private const val LOCK_TIME: Long = 1000L*3L
         private const val POLLING_INTERVAL: Long = 100L
-    }
-
-    init {
-        enableAutoLock()
     }
 
     var onLock: (() -> Unit)? = null
@@ -88,6 +87,7 @@ abstract class Door {
                 beforeIsLock = isLock
                 beforeIsClose = isClose
             } catch(e: Exception) {
+                environment.log.error(e.stackTraceToString())
             }
         }
     }

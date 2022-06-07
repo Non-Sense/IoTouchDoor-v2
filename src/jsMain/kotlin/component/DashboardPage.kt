@@ -2,10 +2,7 @@ package component
 
 import AuthUserContext
 import ThemeContext
-import com.n0n5ense.model.json.CardTouchLog
-import com.n0n5ense.model.json.DoorLog
-import com.n0n5ense.model.json.DoorStatus
-import com.n0n5ense.model.json.ReaderDeviceInfo
+import com.n0n5ense.model.json.*
 import csstype.*
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -106,6 +103,13 @@ val DashBoard = FC<Props> {
                         getDoorStatus(authUser!!).onSuccess {
                             authUser?.accessToken = it.accessToken
                             doorStatus = it.data
+                        }
+                    }
+                }
+                this.onCLickDoorAction = { action ->
+                    MainScope().launch {
+                        postDoorLockStatus(authUser!!, action).onSuccess {
+                            authUser?.accessToken = it.accessToken
                         }
                     }
                 }
@@ -332,13 +336,14 @@ private val MiniPhysicalLog = FC<MiniPhysicalLogProps> { props ->
 private interface DoorStatusProps : Props {
     var status: DoorStatus
     var onClickRefresh: () -> Unit
+    var onCLickDoorAction: (DoorLockAction) -> Unit
 }
 
 private val DoorStatusView = FC<DoorStatusProps> { props ->
     val theme by useContext(ThemeContext)
     Card {
         sx {
-            val isIllegalState = props.status.active || !props.status.isLock || !props.status.isClose
+            val isIllegalState = !(props.status.active && props.status.isLock && props.status.isClose)
             backgroundColor = backgroundColorPicker(theme, isIllegalState)
         }
         CardHeader {
@@ -421,6 +426,25 @@ private val DoorStatusView = FC<DoorStatusProps> { props ->
                     onClick = { props.onClickRefresh() }
                     +Sync.create()
                 }
+            }
+            ReactHTML.div {
+                css {
+                    flexGrow = number(1.0)
+                }
+            }
+            Button {
+                variant = ButtonVariant.text
+                onClick = {
+                    props.onCLickDoorAction.invoke(DoorLockAction("lock"))
+                }
+                +"Lock"
+            }
+            Button {
+                variant = ButtonVariant.text
+                onClick = {
+                    props.onCLickDoorAction.invoke(DoorLockAction("unlock"))
+                }
+                +"Unlock"
             }
         }
     }

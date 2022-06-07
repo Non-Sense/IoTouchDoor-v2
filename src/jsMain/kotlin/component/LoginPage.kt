@@ -33,7 +33,7 @@ val LoginPage = FC<Props> {
             it.onSuccess { token ->
                 Cookies.set(tokenCookieName, token.refreshToken)
                 authUser = AuthUser(token.refreshToken, null)
-                navigate("/unk")
+                navigate("/dashboard")
             }.onFailure {
                 snackbarOpen = true
             }

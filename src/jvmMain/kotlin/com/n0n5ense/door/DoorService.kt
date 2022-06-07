@@ -15,6 +15,7 @@ class DoorService {
             door.onOpen = { onActionCallback?.invoke(PhysicalLogAction.Open) }
             door.onUnlock = { onActionCallback?.invoke(PhysicalLogAction.Unlock) }
             door.onLock = { onActionCallback?.invoke(PhysicalLogAction.Lock) }
+            door.enableAutoLock()
         }
 
         fun lock(force: Boolean = false) {

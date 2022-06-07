@@ -46,6 +46,12 @@ suspend fun getTouchLogCount(authUser: AuthUser): Result<DataWithAccessToken<Cou
     return getJsonDataWithTokenRetry("$serverAddress/api/card/logcount", authUser)
 }
 
+suspend fun postDoorLockStatus(
+    authUser: AuthUser,
+    state: DoorLockAction
+): Result<DataWithAccessToken<Unit>> {
+    return postJsonDataWithTokenRetry("$serverAddress/api/door", authUser, state)
+}
 
 suspend fun getCards(
     page: Int,
