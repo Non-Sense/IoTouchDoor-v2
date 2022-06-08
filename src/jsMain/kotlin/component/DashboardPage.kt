@@ -167,6 +167,9 @@ private interface MiniTouchLogRowProps : Props {
 private val MiniTouchLogRow = FC<MiniTouchLogRowProps> { props ->
     TableRow {
         TableCell {
+            sx {
+                wordBreak = WordBreak.breakAll
+            }
             if (props.name != null)
                 +(props.name)!!
             else
@@ -488,6 +491,9 @@ private val ReaderStatusView = FC<ReaderStatusViewProps> { props ->
                                     +readerInfo.type
                                 }
                                 TableCell {
+                                    sx {
+                                        wordBreak = WordBreak.breakAll
+                                    }
                                     +if(readerInfo.connected) readerInfo.name else "Not Connected"
                                 }
                             }
