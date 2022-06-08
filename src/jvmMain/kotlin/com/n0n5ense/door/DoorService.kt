@@ -30,7 +30,7 @@ class DoorService {
 
         fun addTouchLog(id: String) {
             val cardId = CardId.determineType(id)
-            val accept = TouchCardService.find(cardId.id)?.enabled == true
+            val accept = TouchCardService.find(cardId)?.enabled == true
             TouchLogService.add(cardId, accept)
             if(accept)
                 unlock()

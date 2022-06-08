@@ -1,6 +1,7 @@
 package component
 
 import AuthUserContext
+import CardId
 import util.addCard
 import com.n0n5ense.model.json.EditTouchCard
 import com.n0n5ense.model.json.NewTouchCard
@@ -47,7 +48,9 @@ private val CardListRow = FC<CardListRowProps> { props ->
         }
         if (!props.isXsSize)
             TableCell {
-                +props.card.cardId
+                CardIdDisplayBox {
+                    cardId = props.card.cardId
+                }
             }
         TableCell {
             if (props.card.enabled)
@@ -242,7 +245,8 @@ val CardList = FC<Props> {
                         this.card = card
                         this.onClickEditButton = {
                             dialogCardInfo = card
-                            editCardId = card.cardId
+                            editCardId = card.cardId.id
+                            editCardType = card.cardId.type
                             editCardName = card.name
                             editEnabled = card.enabled
                             editCardIdDisable = true
@@ -282,20 +286,19 @@ val CardList = FC<Props> {
             return TouchCard(
                 -1,
                 editCardName,
-                editCardId,
+                CardId(editCardType, editCardId),
                 editEnabled,
                 null,
-                editCardType
+
             )
         }
         dialogCardInfo ?: return null
         return TouchCard(
             dialogCardInfo!!.id,
             editCardName,
-            editCardId,
+            CardId(editCardType, editCardId),
             editEnabled,
-            dialogCardInfo!!.owner,
-            editCardType
+            dialogCardInfo!!.owner
         )
     }
 

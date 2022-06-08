@@ -1,5 +1,6 @@
 package com.n0n5ense.persistence
 
+import CardId
 import com.n0n5ense.model.TouchCardEntity
 import com.n0n5ense.model.TouchCardTable
 import com.n0n5ense.model.UserTable
@@ -8,6 +9,7 @@ import com.n0n5ense.model.json.NewTouchCard
 import com.n0n5ense.model.json.TouchCard
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SchemaUtils.create
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class TouchCardService {
@@ -17,10 +19,13 @@ class TouchCardService {
             return TouchCard(
                 entity.id.value,
                 entity.name,
-                entity.cardId,
+                CardId(
+                    kotlin.runCatching { CardIdType.valueOf(entity.cardType) }.getOrDefault(CardIdType.Unknown),
+                    entity.cardId
+                ),
                 entity.enabled,
                 entity.owner?.value,
-                kotlin.runCatching { CardIdType.valueOf(entity.cardType) }.getOrDefault(CardIdType.Unknown)
+
             )
         }
 
@@ -33,11 +38,11 @@ class TouchCardService {
         fun add(newTouchCard: NewTouchCard) {
             transaction {
                 TouchCardEntity.new {
-                    this.cardId = newTouchCard.cardId
+                    this.cardId = newTouchCard.cardId.id
                     this.name = newTouchCard.name
                     this.enabled = newTouchCard.enabled
                     this.owner = newTouchCard.owner?.let { EntityID(it, UserTable) }
-                    this.cardType = newTouchCard.cardId
+                    this.cardType = newTouchCard.cardId.type.name
                 }
             }
         }
@@ -72,11 +77,11 @@ class TouchCardService {
             }
         }
 
-        fun find(cardId: String): TouchCard? {
+        fun find(cardId: CardId): TouchCard? {
             return kotlin.runCatching {
                 transaction {
                     TouchCardEntity.find {
-                        TouchCardTable.cardId eq cardId
+                        (TouchCardTable.cardId eq cardId.id) and (TouchCardTable.cardType eq cardId.type.name)
                     }.single()
                 }
             }.map(::fromEntity).getOrNull()

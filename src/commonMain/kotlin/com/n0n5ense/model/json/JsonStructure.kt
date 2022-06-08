@@ -41,7 +41,7 @@ data class Count(
 @Serializable
 data class NewTouchCard(
     val name: String,
-    val cardId: String,
+    val cardId: CardId,
     val enabled: Boolean,
     val owner: String? = null
 )
@@ -56,10 +56,9 @@ data class EditTouchCard(
 data class TouchCard(
     val id: Int,
     val name: String,
-    val cardId: String,
+    val cardId: CardId,
     val enabled: Boolean,
-    val owner: String?,
-    val type: CardIdType
+    val owner: String?
 )
 
 @Serializable
