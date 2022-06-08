@@ -1,5 +1,6 @@
 package com.n0n5ense.persistence
 
+import CardId
 import com.n0n5ense.model.TouchCardLog
 import com.n0n5ense.model.TouchCardLogTable
 import com.n0n5ense.model.TouchCardTable
@@ -21,12 +22,13 @@ class TouchLogService {
             }
         }
 
-        fun add(cardId: String, accept: Boolean, time: LocalDateTime = LocalDateTime.now(Clock.systemUTC())) {
+        fun add(cardId: CardId, accept: Boolean, time: LocalDateTime = LocalDateTime.now(Clock.systemUTC())) {
             transaction {
                 TouchCardLog.new {
-                    this.cardId = cardId
+                    this.cardId = cardId.id
                     this.accept = accept
                     this.time = time
+                    this.cardType = cardId.type.name
                 }
             }
         }
@@ -47,7 +49,8 @@ class TouchLogService {
                             TouchCardTable.name,
                             TouchCardLogTable.cardId,
                             TouchCardLogTable.accept,
-                            TouchCardLogTable.time
+                            TouchCardLogTable.time,
+                            TouchCardLogTable.cardType
                         )
                     )
                     .selectAll()
@@ -57,9 +60,13 @@ class TouchLogService {
                         CardTouchLog(
                             it[TouchCardLogTable.id].value,
                             it.getOrNull(TouchCardTable.name),
-                            it[TouchCardLogTable.cardId],
+                            CardId(
+                                kotlin.runCatching { CardIdType.valueOf(it[TouchCardLogTable.cardType]) }.getOrDefault(CardIdType.Unknown),
+                                it[TouchCardLogTable.cardId]
+                            ),
                             it[TouchCardLogTable.accept],
-                            it[TouchCardLogTable.time].toString()
+                            it[TouchCardLogTable.time].toString(),
+
                         )
                     }
             }

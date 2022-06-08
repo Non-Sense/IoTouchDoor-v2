@@ -1,5 +1,6 @@
 package com.n0n5ense.model.json
 
+import CardId
 import CardIdType
 import kotlinx.serialization.Serializable
 
@@ -27,9 +28,9 @@ data class DoorLog(
 data class CardTouchLog(
     val id: Int,
     val name: String?,
-    val cardId: String,
+    val cardId: CardId,
     val accept: Boolean,
-    val time: String
+    val time: String,
 )
 
 @Serializable

@@ -75,8 +75,10 @@ private fun init(environment: ApplicationEnvironment) {
     Database.connect(environment.config.property("database.path").getString(), "org.sqlite.JDBC")
     databaseInit()
 
-    DoorService.init(DoorByGpio(environment.config, environment))
-    DoorService.onActionCallback = { PhysicalLogService.add(it) }
+    if(!environment.config.property("gpio.mock").getString().toBoolean()) {
+        DoorService.init(DoorByGpio(environment.config, environment))
+        DoorService.onActionCallback = { PhysicalLogService.add(it) }
+    }
 
     FelicaService.enabled = environment.config.property("feature.felica").getString().toBoolean()
     if(FelicaService.enabled)

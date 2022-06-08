@@ -29,7 +29,7 @@ import kotlin.js.Date
 
 private interface TouchLogRowProps : Props {
     var name: String?
-    var cardId: String
+    var cardId: CardId
     var time: String
     var accept: Boolean
     var isXsSize: Boolean
@@ -37,7 +37,6 @@ private interface TouchLogRowProps : Props {
 
 private val TouchLogRow = FC<TouchLogRowProps> { props ->
     var open by useState(false)
-    val cardId = CardId.determineType(props.cardId)
     Fragment {
         TableRow {
             if (props.isXsSize)
@@ -62,7 +61,7 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                     +(props.name)!!
                 else
                     NavLink {
-                        to = "/cards?i=${cardId.id}&t=${cardId.type.name}"
+                        to = "/cards?i=${props.cardId.id}&t=${props.cardId.type.name}"
                         +"Add this"
                     }
             }
@@ -73,7 +72,7 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                             borderBottom = 0.px
                         }
                     CardIdDisplayBox {
-                        this.cardId = cardId
+                        this.cardId = props.cardId
                     }
                 }
             TableCell {
@@ -117,7 +116,7 @@ private val TouchLogRow = FC<TouchLogRowProps> { props ->
                                 }
                             }
                             CardIdDisplayBox {
-                                this.cardId = cardId
+                                this.cardId = props.cardId
                             }
                         }
                     }

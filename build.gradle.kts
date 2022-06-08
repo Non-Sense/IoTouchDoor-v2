@@ -90,6 +90,8 @@ kotlin {
 
                 implementation(kotlin("test"))
                 implementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
+
+                implementation(files("./webResource"))
             }
         }
         val jvmTest by getting
@@ -146,13 +148,3 @@ tasks.getByName<Jar>("jvmJar") {
 val shadowJar = tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     mergeServiceFiles()
 }
-
-//tasks.jar {
-//    manifest {
-//        attributes["Main-Class"] = "com.n0n5ense.ApplicationKt"
-//    }
-//    configurations["compileClasspath"].forEach { file: File ->
-//        from(zipTree(file.absoluteFile))
-//    }
-//    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-//}

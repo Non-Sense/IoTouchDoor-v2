@@ -10,6 +10,7 @@ object TouchCardLogTable: IntIdTable("touchCardLog", "id") {
     val cardId = text("cardId")
     val accept = bool("accept")
     val time = datetime("time")
+    val cardType = text("cardType")
 }
 
 class TouchCardLog(id: EntityID<Int>): IntEntity(id) {
@@ -18,4 +19,5 @@ class TouchCardLog(id: EntityID<Int>): IntEntity(id) {
     var cardId by TouchCardLogTable.cardId
     var accept by TouchCardLogTable.accept
     var time by TouchCardLogTable.time
+    var cardType by TouchCardLogTable.cardType
 }

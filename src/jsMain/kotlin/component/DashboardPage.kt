@@ -1,6 +1,7 @@
 package component
 
 import AuthUserContext
+import CardId
 import ThemeContext
 import com.n0n5ense.model.json.*
 import csstype.*
@@ -156,7 +157,7 @@ val DashBoard = FC<Props> {
 
 private interface MiniTouchLogRowProps : Props {
     var name: String?
-    var cardId: String
+    var cardId: CardId
     var time: String
     var accept: Boolean
     var isXsSize: Boolean
@@ -164,14 +165,13 @@ private interface MiniTouchLogRowProps : Props {
 
 
 private val MiniTouchLogRow = FC<MiniTouchLogRowProps> { props ->
-    val cardId = CardId.determineType(props.cardId)
     TableRow {
         TableCell {
             if (props.name != null)
                 +(props.name)!!
             else
                 NavLink {
-                    to = "/cards?i=${cardId.id}&t=${cardId.type.name}"
+                    to = "/cards?i=${props.cardId.id}&t=${props.cardId.type.name}"
                     +"Add this"
                 }
         }

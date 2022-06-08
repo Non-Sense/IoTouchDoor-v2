@@ -1,9 +1,13 @@
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class CardIdType {
     Felica,
     GunmaUniv,
     Unknown
 }
 
+@Serializable
 data class CardId(
     val type: CardIdType,
     val id: String
