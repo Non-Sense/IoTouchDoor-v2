@@ -40,6 +40,7 @@ val DashBoard = FC<Props> {
     var doorStatus by useState(DoorStatus(false, false, false))
     var readerStatus by useState<List<ReaderDeviceInfo>>(listOf())
     var physicalLog by useState<List<DoorLog>>(listOf())
+    var escapeMode by useState(EscapeMode(false))
 
     fun fetch() {
         MainScope().launch {
@@ -58,6 +59,10 @@ val DashBoard = FC<Props> {
             getReaderStatus(authUser!!).onSuccess {
                 authUser?.accessToken = it.accessToken
                 readerStatus = it.data
+            }
+            getEscapeMode(authUser!!).onSuccess {
+                authUser?.accessToken = it.accessToken
+                escapeMode = it.data
             }
         }
     }
@@ -99,6 +104,7 @@ val DashBoard = FC<Props> {
             md = 6
             DoorStatusView {
                 this.status = doorStatus
+                this.escapeMode = escapeMode
                 this.onClickRefresh = {
                     MainScope().launch {
                         getDoorStatus(authUser!!).onSuccess {
@@ -110,6 +116,13 @@ val DashBoard = FC<Props> {
                 this.onCLickDoorAction = { action ->
                     MainScope().launch {
                         postDoorLockStatus(authUser!!, action).onSuccess {
+                            authUser?.accessToken = it.accessToken
+                        }
+                    }
+                }
+                this.onClickDisableEscapeMode = {
+                    MainScope().launch {
+                        postEscapeMode(false, authUser!!).onSuccess {
                             authUser?.accessToken = it.accessToken
                         }
                     }
@@ -340,6 +353,8 @@ private interface DoorStatusProps : Props {
     var status: DoorStatus
     var onClickRefresh: () -> Unit
     var onCLickDoorAction: (DoorLockAction) -> Unit
+    var escapeMode: EscapeMode
+    var onClickDisableEscapeMode: () -> Unit
 }
 
 private val DoorStatusView = FC<DoorStatusProps> { props ->
@@ -356,6 +371,28 @@ private val DoorStatusView = FC<DoorStatusProps> { props ->
             title = ReactNode("Door Status")
         }
         CardContent {
+            if (props.escapeMode.enable) {
+                Toolbar {
+                    sx {
+                        display = Display.flex
+                        alignItems = AlignItems.center
+                    }
+                    Typography {
+                        variant = "h6"
+                        sx {
+                            color = Color("#f00000")
+                        }
+                        +"EscapeMode is enabled"
+                    }
+                    Button {
+                        variant = ButtonVariant.contained
+                        onClick = {
+                            props.onClickDisableEscapeMode()
+                        }
+                        +"Disable"
+                    }
+                }
+            }
             if (props.status.active) {
                 Toolbar {
                     sx {

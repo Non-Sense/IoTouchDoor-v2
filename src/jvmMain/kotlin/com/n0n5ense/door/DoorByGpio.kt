@@ -14,6 +14,11 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class DoorByGpio(config: ApplicationConfig, private val environment: ApplicationEnvironment): Door(environment) {
 
+    companion object {
+        private const val EscapeModeForceExitTime = 5000
+        private const val ForceUnlockTime = 2200
+    }
+
     private val servoPort = config.property("gpio.servoPort").getString().toInt()
     private val servoSensorPort = config.property("gpio.servoSenorPort").getString().toInt()
     private val doorSensorPort = config.property("gpio.doorSensorPort").getString().toInt()
@@ -79,9 +84,24 @@ class DoorByGpio(config: ApplicationConfig, private val environment: Application
         }
     }
 
+    private var lastUnlockSwitchPush = System.currentTimeMillis()
     private val unlockSwitchListener = DigitalStateChangeListener { event ->
-        if(event?.state() == DigitalState.LOW) {
-            unlock()
+        when (event?.state()) {
+            DigitalState.LOW -> {
+                if (!isEscapeMode)
+                    unlock()
+                lastUnlockSwitchPush = System.currentTimeMillis()
+            }
+            DigitalState.HIGH -> {
+                val pushDuration = System.currentTimeMillis() - lastUnlockSwitchPush
+                if (pushDuration >= EscapeModeForceExitTime) {
+                    setEscapeMode(false)
+                }
+                if (pushDuration >= ForceUnlockTime) {
+                    unlock()
+                }
+            }
+            else -> {}
         }
     }
 
@@ -93,28 +113,68 @@ class DoorByGpio(config: ApplicationConfig, private val environment: Application
     }
 
     private var job: Job? = null
+    private var isEscapeMode = false
+
+    private var brinkJob: Job? = null
+
+    private fun startBrinkLED() {
+        stopBrinkLED()
+        brinkJob = CoroutineScope(Dispatchers.Default).launch {
+            while(isActive) {
+                if(brinkJob?.isCancelled == true)
+                    break
+                lockIndicator.state(DigitalState.HIGH)
+                delay(200)
+                lockIndicator.state(DigitalState.LOW)
+                delay(800)
+            }
+            lockIndicator.state(servoSensor.state())
+        }
+    }
+
+    private fun stopBrinkLED() {
+        brinkJob?.cancel()
+        brinkJob = null
+    }
 
     private fun cancelJob() {
         job?.cancel()
         job = null
     }
 
-    private fun moveServo(position: Number): Job = CoroutineScope(Dispatchers.Default).launch {
-        pwm.on(position)
-        delay(servoWaitTime.milliseconds)
-        pwm.off()
-    }
+    private fun moveServo(position: Number, offEnable: Boolean): Job =
+        CoroutineScope(Dispatchers.Default).launch {
+            pwm.on(position)
+            if(!offEnable)
+                return@launch
+            delay(servoWaitTime.milliseconds)
+            pwm.off()
+        }
 
     override fun unlock() {
         cancelJob()
-        job = moveServo(servoUnlockPosition)
+        job = moveServo(servoUnlockPosition, true)
     }
 
     override fun lock(force: Boolean) {
         if(getStatus()?.isClose == true || force) {
             cancelJob()
-            job = moveServo(servoLockPosition)
+            job = moveServo(servoLockPosition, !isEscapeMode)
         }
+    }
+
+    override fun setEscapeMode(enable: Boolean) {
+        isEscapeMode = enable
+        lock()
+        if(enable) {
+            startBrinkLED()
+        } else {
+            stopBrinkLED()
+        }
+    }
+
+    override fun getEscapeMode(): Boolean {
+        return isEscapeMode
     }
 
     override fun getStatus(): DoorStatus? {

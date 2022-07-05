@@ -73,6 +73,15 @@ fun Application.configureRouting() {
                     }
                 }
 
+                route("/escape") {
+                    post {
+                        setEscapeMode()
+                    }
+                    get {
+                        getEscapeMode()
+                    }
+                }
+
                 route("/door") {
                     post {
                         doorLock()
@@ -266,4 +275,18 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.readerStatus() {
         statusList.add(MagneticReader.getInfo())
     }
     call.respond(statusList)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.setEscapeMode() {
+    val escapeMode = getPostData<EscapeMode>() ?: run {
+        call.respond(HttpStatusCode.BadRequest)
+        return
+    }
+    DoorService.setEscapeMode(escapeMode.enable)
+    call.respond(HttpStatusCode.OK)
+}
+
+private suspend fun PipelineContext<Unit, ApplicationCall>.getEscapeMode() {
+    val enable = DoorService.getEscapeMode()
+    call.respond(HttpStatusCode.OK, EscapeMode(enable))
 }

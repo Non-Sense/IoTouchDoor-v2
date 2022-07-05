@@ -67,3 +67,8 @@ data class ReaderDeviceInfo(
     val connected: Boolean,
     val name: String
 )
+
+@Serializable
+data class EscapeMode(
+    val enable: Boolean
+)

@@ -25,6 +25,9 @@ abstract class Door(
     abstract fun lock(force: Boolean = false)
     abstract fun getStatus(): DoorStatus?
 
+    abstract fun setEscapeMode(enable: Boolean)
+    abstract fun getEscapeMode(): Boolean
+
     private var job: Job? = null
 
     private fun polling(): () -> Unit {

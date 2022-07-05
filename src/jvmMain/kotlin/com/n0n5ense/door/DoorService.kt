@@ -3,6 +3,8 @@ package com.n0n5ense.door
 import com.n0n5ense.model.PhysicalLogAction
 import com.n0n5ense.persistence.TouchCardService
 import com.n0n5ense.persistence.TouchLogService
+import kotlinx.coroutines.*
+import kotlin.time.Duration.Companion.minutes
 
 class DoorService {
     companion object {
@@ -24,6 +26,33 @@ class DoorService {
 
         fun unlock() {
             door?.unlock()
+        }
+
+        private var escapeModeForceCancelJob: Job? = null
+        fun setEscapeMode(enable: Boolean) {
+            door?.setEscapeMode(enable)
+            if(enable && door?.getEscapeMode() != true)
+                startEscapeModeCancelTimer()
+            if(!enable)
+                cancelEscapeModeCancelTimer()
+        }
+
+        private fun startEscapeModeCancelTimer() {
+            cancelEscapeModeCancelTimer()
+            escapeModeForceCancelJob = CoroutineScope(Dispatchers.Default).launch {
+                delay(45.minutes)
+                if(isActive)
+                    setEscapeMode(false)
+            }
+        }
+
+        private fun cancelEscapeModeCancelTimer() {
+            escapeModeForceCancelJob?.cancel()
+            escapeModeForceCancelJob = null
+        }
+
+        fun getEscapeMode(): Boolean {
+            return door?.getEscapeMode() == true
         }
 
         fun status() = door?.getStatus()

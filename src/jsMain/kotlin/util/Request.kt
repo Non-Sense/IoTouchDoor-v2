@@ -87,6 +87,19 @@ suspend fun deleteCard(
     return deleteWithTokenRetry("$serverAddress/api/card/$cardId", authUser)
 }
 
+suspend fun postEscapeMode(
+    enable: Boolean,
+    authUser: AuthUser
+): Result<DataWithAccessToken<Unit>> {
+    return postJsonDataWithTokenRetry("$serverAddress/api/escape", authUser, EscapeMode(enable))
+}
+
+suspend fun getEscapeMode(
+    authUser: AuthUser
+): Result<DataWithAccessToken<EscapeMode>> {
+    return getJsonDataWithTokenRetry("$serverAddress/api/escape", authUser)
+}
+
 enum class RequestMethod {
     GET,
     POST,
