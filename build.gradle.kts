@@ -84,6 +84,8 @@ kotlin {
                 implementation("com.pi4j:pi4j-plugin-pigpio:2.1.1")
 //                implementation("com.pi4j:pi4j-plugin-mock:2.1.1")
 
+                implementation("net.dv8tion:JDA:5.0.0-beta.2")
+
                 implementation("org.usb4java:usb4java:1.3.0")
                 implementation("org.usb4java:usb4java-javax:1.3.0")
                 implementation("com.igormaznitsa:jbbp:1.4.1")

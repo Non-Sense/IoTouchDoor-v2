@@ -10,6 +10,9 @@
     <logger name="org.eclipse.jetty" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
     <logger name="com.pi4j" level="ERROR"/>
+    <logger name="net.dv8tion.jda" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
 <!--    <logger name="c.p.l.pigpio" level="ERROR"/>-->
 <!--    <logger name="c.p.p.impl" level="ERROR"/>-->
 </configuration>

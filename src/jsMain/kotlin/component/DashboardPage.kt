@@ -3,11 +3,13 @@ package component
 import AuthUserContext
 import CardId
 import ThemeContext
+import Themes
 import com.n0n5ense.model.json.*
 import csstype.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.js.timers.setInterval
 import mui.icons.material.*
 import mui.material.*
 import mui.material.Size
@@ -32,6 +34,8 @@ val DashboardPage = FC<Props> {
         DashBoard()
     }
 }
+
+private var fetchJob: Job? = null
 
 val DashBoard = FC<Props> {
 
@@ -69,8 +73,12 @@ val DashBoard = FC<Props> {
 
     useEffectOnce {
         fetch()
-        setInterval(dashboardFetchInterval) {
-            fetch()
+        fetchJob?.cancel()
+        fetchJob = MainScope().launch {
+            while (true) {
+                delay(dashboardFetchInterval)
+                fetch()
+            }
         }
     }
 
@@ -509,7 +517,7 @@ private val ReaderStatusView = FC<ReaderStatusViewProps> { props ->
             title = ReactNode("Reader Status")
         }
         CardContent {
-            if(props.list.isEmpty()){
+            if (props.list.isEmpty()) {
                 +"Not Configured"
             } else {
                 Table {
@@ -531,7 +539,7 @@ private val ReaderStatusView = FC<ReaderStatusViewProps> { props ->
                                     sx {
                                         wordBreak = WordBreak.breakAll
                                     }
-                                    +if(readerInfo.connected) readerInfo.name else "Not Connected"
+                                    +if (readerInfo.connected) readerInfo.name else "Not Connected"
                                 }
                             }
                         }
