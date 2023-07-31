@@ -93,16 +93,24 @@ private fun init(environment: ApplicationEnvironment) {
 
     val bot = DiscordBot(
         discordBotToken = environment.config.property("notifier.discordToken").getString(),
-        channelId = environment.config.property("notifier.channelId").getString()
+        channelId = environment.config.property("notifier.channelId").getString(),
+        voiceChannelId = environment.config.property("notifier.voiceChannelId").getString(),
+        audioPath = environment.config.property("notifier.audioPath").getString()
     ).apply {
         start()
     }
-    val doorBell: DoorBell = RealDoorBell(
+    val doorBell = RealDoorBell(
         port = environment.config.property("notifier.buttonPort").getString().toInt()
     ) {
         bot.sendNotify()
     }
-
+    CoroutineScope(Dispatchers.Default).launch {
+        while(true) {
+            val str = readLine() ?: continue
+            if(str == "n")
+                doorBell.pushButton()
+        }
+    }
 }
 
 fun main(args: Array<String>) {

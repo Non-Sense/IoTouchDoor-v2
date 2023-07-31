@@ -17,6 +17,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven("https://m2.dv8tion.net/releases")
     maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven")
 //    maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
 //    maven { url = uri("https://dl.bintray.com/kotlin/exposed/") }
@@ -85,6 +86,7 @@ kotlin {
 //                implementation("com.pi4j:pi4j-plugin-mock:2.1.1")
 
                 implementation("net.dv8tion:JDA:5.0.0-beta.2")
+                implementation("com.sedmelluq:lavaplayer:1.3.78")
 
                 implementation("org.usb4java:usb4java:1.3.0")
                 implementation("org.usb4java:usb4java-javax:1.3.0")
@@ -113,7 +115,7 @@ kotlin {
 
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-                implementation(npm("js-cookie","3.0.1"))
+                implementation(npm("js-cookie", "3.0.1"))
             }
         }
     }
@@ -134,7 +136,7 @@ tasks.named<JavaExec>("run") {
 }
 
 tasks.getByName<Jar>("jvmJar") {
-    val taskName = if (project.hasProperty("isProduction")
+    val taskName = if(project.hasProperty("isProduction")
         || project.gradle.startParameter.taskNames.contains("installDist")
     ) {
         "jsBrowserProductionWebpack"
