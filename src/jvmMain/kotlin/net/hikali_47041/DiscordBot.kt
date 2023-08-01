@@ -2,15 +2,22 @@ package net.hikali_47041
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.audio.AudioSendHandler
+import net.dv8tion.jda.api.audio.SpeakingMode
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.nio.ByteBuffer
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -37,6 +44,56 @@ private class AudioPlayerSendHandler(
 
 }
 
+private class AudioFileHandler(
+    audioPath: String,
+    private val playerManager: AudioPlayerManager
+) {
+    private val logger = LoggerFactory.getLogger("AudioFileHandler")
+
+    private val tracks = mutableSetOf<AudioTrack>()
+
+    init {
+        val file = File(audioPath)
+        if(file.isFile)
+            loadTrack(audioPath)
+        if(file.isDirectory)
+            file.walk().forEach {
+                if(it.isFile)
+                    loadTrack(it.absolutePath)
+            }
+    }
+
+    fun pickAudio(): AudioTrack? {
+        return tracks.randomOrNull()
+    }
+
+    private fun loadTrack(path: String) {
+        playerManager.loadItem(path, object: AudioLoadResultHandler {
+            override fun trackLoaded(track: AudioTrack?) {
+                track?.let {
+                    logger.debug("loaded: ${it.info.uri}")
+                    tracks += it
+                }
+            }
+
+            override fun playlistLoaded(playlist: AudioPlaylist?) {
+                playlist?.tracks?.let {
+                    tracks.addAll(it)
+                }
+            }
+
+            override fun noMatches() {
+                logger.error("audio file not found")
+            }
+
+            override fun loadFailed(exception: FriendlyException?) {
+                logger.error("failed to load audio file")
+            }
+        })
+    }
+
+}
+
 class DiscordBot(
     discordBotToken: String,
     private val channelId: String,
@@ -50,7 +107,7 @@ class DiscordBot(
     private val playerManager = DefaultAudioPlayerManager()
     private val player = playerManager.createPlayer()
     private val audioPlayerSendHandler = AudioPlayerSendHandler(player)
-    private var audioTrack: AudioTrack? = null
+    private var audioFileHandler: AudioFileHandler? = null
 
     companion object {
         private val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS")
@@ -59,23 +116,11 @@ class DiscordBot(
     fun start() {
         AudioSourceManagers.registerLocalSource(playerManager)
         jda.awaitReady()
-        playerManager.loadItem(audioPath, object: AudioLoadResultHandler {
-            override fun trackLoaded(track: AudioTrack?) {
-                audioTrack = track
-                connectToVoiceChannel()
-            }
-
-            override fun playlistLoaded(playlist: AudioPlaylist?) {
-            }
-
-            override fun noMatches() {
-                logger.error("audio file not found")
-            }
-
-            override fun loadFailed(exception: FriendlyException?) {
-                logger.error("failed to load audio file")
-            }
-        })
+        audioFileHandler = AudioFileHandler(audioPath, playerManager)
+        CoroutineScope(Dispatchers.Default).launch {
+            delay(3000)
+            connectToVoiceChannel()
+        }
     }
 
     private fun connectToVoiceChannel() {
@@ -83,13 +128,15 @@ class DiscordBot(
         val voiceChannel = jda.getVoiceChannelById(voiceChannelId) ?: return
         val audioManager = voiceChannel.guild.audioManager
         audioManager.sendingHandler = audioPlayerSendHandler
+        audioManager.setSpeakingMode(SpeakingMode.SOUNDSHARE)
         audioManager.openAudioConnection(voiceChannel)
         logger.debug("voice channel connected")
     }
 
     fun sendNotify() {
         logger.debug("send notify")
-        audioTrack?.let {
+        audioFileHandler?.pickAudio()?.let {
+            player.stopTrack()
             player.playTrack(it.makeClone())
         }
 
