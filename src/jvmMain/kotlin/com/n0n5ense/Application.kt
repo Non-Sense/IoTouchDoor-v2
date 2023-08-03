@@ -45,9 +45,9 @@ fun Application.module() {
 
 private fun openFelicaReader(environment: ApplicationEnvironment) {
     CoroutineScope(Dispatchers.Default).launch {
-        while (true) {
+        while(true) {
             val result = FelicaService.open()
-            if (result.isSuccess)
+            if(result.isSuccess)
                 break
             result.onFailure {
                 environment.log.error(it.stackTraceToString())
@@ -62,9 +62,9 @@ private fun openFelicaReader(environment: ApplicationEnvironment) {
 
 private fun openMagneticReader(path: String) {
     CoroutineScope(Dispatchers.Default).launch {
-        while (true) {
+        while(true) {
             val result = MagneticReader.open(path)
-            if (result.isSuccess)
+            if(result.isSuccess)
                 break
             delay(1000)
         }
@@ -78,24 +78,25 @@ private fun init(environment: ApplicationEnvironment) {
     Database.connect(environment.config.property("database.path").getString(), "org.sqlite.JDBC")
     databaseInit()
 
-    if (!environment.config.property("gpio.mock").getString().toBoolean()) {
+    if(!environment.config.property("gpio.mock").getString().toBoolean()) {
         DoorService.init(DoorByGpio(environment.config, environment))
         DoorService.onActionCallback = { PhysicalLogService.add(it) }
     }
 
     FelicaService.enabled = environment.config.property("feature.felica").getString().toBoolean()
-    if (FelicaService.enabled)
+    if(FelicaService.enabled)
         openFelicaReader(environment)
 
     MagneticReader.enabled = environment.config.property("feature.magnetic").getString().toBoolean()
-    if (MagneticReader.enabled)
+    if(MagneticReader.enabled)
         openMagneticReader(environment.config.property("feature.magneticReaderPath").getString())
 
     val bot = DiscordBot(
         discordBotToken = environment.config.property("notifier.discordToken").getString(),
         channelId = environment.config.property("notifier.channelId").getString(),
         voiceChannelId = environment.config.property("notifier.voiceChannelId").getString(),
-        audioPath = environment.config.property("notifier.audioPath").getString()
+        audioPath = environment.config.property("notifier.audioPath").getString(),
+        entryAudioPath = environment.config.property("notifier.entryAudioPath").getString()
     ).apply {
         start()
     }
@@ -104,11 +105,20 @@ private fun init(environment: ApplicationEnvironment) {
     ) {
         bot.sendNotify()
     }
+    FelicaService.onTouch = {
+        bot.sendEntrySound()
+    }
+    MagneticReader.onTouch = {
+        bot.sendEntrySound()
+    }
+
     CoroutineScope(Dispatchers.Default).launch {
         while(true) {
             val str = readLine() ?: continue
-            if(str == "n")
-                doorBell.pushButton()
+            when(str) {
+                "n" -> doorBell.pushButton()
+                "m" -> bot.sendEntrySound()
+            }
         }
     }
 }

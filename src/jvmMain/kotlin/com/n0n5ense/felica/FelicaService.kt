@@ -10,6 +10,7 @@ class FelicaService {
 
         var onError: ((Throwable) -> Unit)? = null
         var enabled = false
+        var onTouch: ((FelicaId) -> Unit)? = null
 
         fun isConnected(): Boolean {
             return felicaReader != null
@@ -50,6 +51,7 @@ class FelicaService {
 
         private fun onCardTouch(felicaId: FelicaId) {
             DoorService.addTouchLog(felicaId.idm)
+            onTouch?.invoke(felicaId)
         }
     }
 }

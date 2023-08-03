@@ -24,6 +24,7 @@ class MagneticReader {
         private var reader: MagReader? = null
         private var job: Job? = null
         private var devicePath: String? = null
+        var onTouch: ((String)->Unit)? = null
 
         var enabled = false
         var onError: ((Throwable) -> Unit)? = null
@@ -91,6 +92,7 @@ class MagneticReader {
 
         private fun onEnter(id: String) {
             DoorService.addTouchLog(id)
+            onTouch?.invoke(id)
         }
     }
 }

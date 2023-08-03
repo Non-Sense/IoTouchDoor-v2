@@ -98,7 +98,8 @@ class DiscordBot(
     discordBotToken: String,
     private val channelId: String,
     private val voiceChannelId: String,
-    private val audioPath: String
+    private val audioPath: String,
+    private val entryAudioPath: String
 ) {
 
     private val logger = LoggerFactory.getLogger("DiscordBot")
@@ -108,6 +109,7 @@ class DiscordBot(
     private val player = playerManager.createPlayer()
     private val audioPlayerSendHandler = AudioPlayerSendHandler(player)
     private var audioFileHandler: AudioFileHandler? = null
+    private var entryAudioFileHandler: AudioFileHandler? = null
 
     companion object {
         private val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS")
@@ -117,6 +119,7 @@ class DiscordBot(
         AudioSourceManagers.registerLocalSource(playerManager)
         jda.awaitReady()
         audioFileHandler = AudioFileHandler(audioPath, playerManager)
+        entryAudioFileHandler = AudioFileHandler(entryAudioPath, playerManager)
         CoroutineScope(Dispatchers.Default).launch {
             delay(3000)
             connectToVoiceChannel()
@@ -127,10 +130,18 @@ class DiscordBot(
         logger.debug("trying to connect to voice channel")
         val voiceChannel = jda.getVoiceChannelById(voiceChannelId) ?: return
         val audioManager = voiceChannel.guild.audioManager
-        audioManager.sendingHandler = audioPlayerSendHandler
         audioManager.setSpeakingMode(SpeakingMode.SOUNDSHARE)
+        audioManager.sendingHandler = audioPlayerSendHandler
         audioManager.openAudioConnection(voiceChannel)
         logger.debug("voice channel connected")
+    }
+
+    fun sendEntrySound() {
+        logger.debug("entry")
+        entryAudioFileHandler?.pickAudio()?.let {
+            player.stopTrack()
+            player.playTrack(it.makeClone())
+        }
     }
 
     fun sendNotify() {
