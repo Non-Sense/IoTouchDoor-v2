@@ -40,10 +40,10 @@ class FelicaReader {
 
     private fun preCommand() {
         reader.sendCommand(Chipset.CMD_SET_COMMAND_TYPE, byteArrayOf(0x01))
-        reader.sendCommand(Chipset.CMD_GET_FIRMWARE_VERSION).let {
+        reader.sendCommand(Chipset.CMD_GET_FIRMWARE_VERSION)?.let {
             firmwareVersion = "%d.%02d".format(it.get(1), it.get(0))
         }
-        reader.sendCommand(Chipset.CMD_GET_PD_DATA_VERSION).let {
+        reader.sendCommand(Chipset.CMD_GET_PD_DATA_VERSION)?.let {
             pdDataVersion = "%d.%02d".format(it.get(1), it.get(0))
         }
         reader.sendCommand(Chipset.CMD_SWITCH_RF, byteArrayOf(0x00))
@@ -84,7 +84,7 @@ class FelicaReader {
         val buf = reader.sendCommand(
             Chipset.CMD_IN_COMM_RF,
             byteArrayOf(0x6e, 0x00, 0x06, 0x00, 0xff.toByte(), 0xff.toByte(), 0x01, 0x00)
-        )
+        ) ?: return
         if(buf.array().contentEquals(byteArrayOf(0x80.toByte(), 0x00, 0x00, 0x00))) {
             idm = 0L
             return

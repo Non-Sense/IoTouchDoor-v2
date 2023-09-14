@@ -124,6 +124,7 @@ class DiscordBot(
             delay(3000)
             connectToVoiceChannel()
         }
+        jda.isAutoReconnect = true
     }
 
     private fun connectToVoiceChannel() {

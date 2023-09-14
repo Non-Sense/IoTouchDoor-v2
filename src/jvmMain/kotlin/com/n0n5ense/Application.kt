@@ -20,7 +20,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import net.hikali_47041.DiscordBot
-import net.hikali_47041.DoorBell
 import net.hikali_47041.RealDoorBell
 import org.jetbrains.exposed.sql.Database
 
@@ -91,33 +90,50 @@ private fun init(environment: ApplicationEnvironment) {
     if(MagneticReader.enabled)
         openMagneticReader(environment.config.property("feature.magneticReaderPath").getString())
 
-    val bot = DiscordBot(
-        discordBotToken = environment.config.property("notifier.discordToken").getString(),
-        channelId = environment.config.property("notifier.channelId").getString(),
-        voiceChannelId = environment.config.property("notifier.voiceChannelId").getString(),
-        audioPath = environment.config.property("notifier.audioPath").getString(),
-        entryAudioPath = environment.config.property("notifier.entryAudioPath").getString()
-    ).apply {
-        start()
+    val bot = runCatching {
+        DiscordBot(
+            discordBotToken = environment.config.property("notifier.discordToken").getString(),
+            channelId = environment.config.property("notifier.channelId").getString(),
+            voiceChannelId = environment.config.property("notifier.voiceChannelId").getString(),
+            audioPath = environment.config.property("notifier.audioPath").getString(),
+            entryAudioPath = environment.config.property("notifier.entryAudioPath").getString()
+        ).apply {
+            start()
+        }
+    }.getOrNull()
+
+    val doorBell = bot?.let {
+        RealDoorBell(
+            port = environment.config.property("notifier.buttonPort").getString().toInt()
+        ) {
+            runCatching {
+                bot.sendNotify()
+            }
+        }
     }
-    val doorBell = RealDoorBell(
-        port = environment.config.property("notifier.buttonPort").getString().toInt()
-    ) {
-        bot.sendNotify()
-    }
+
+    RebootService(
+        pin = environment.config.property("gpio.rebootPort").getString().toInt(),
+        pushDelay = environment.config.property("gpio.rebootButtonDelayMillis").getString().toLong()
+    )
+
     FelicaService.onTouch = {
-        bot.sendEntrySound()
+        runCatching {
+            bot?.sendEntrySound()
+        }
     }
     MagneticReader.onTouch = {
-        bot.sendEntrySound()
+        runCatching {
+            bot?.sendEntrySound()
+        }
     }
 
     CoroutineScope(Dispatchers.Default).launch {
         while(true) {
             val str = readLine() ?: continue
             when(str) {
-                "n" -> doorBell.pushButton()
-                "m" -> bot.sendEntrySound()
+                "n" -> doorBell?.pushButton()
+                "m" -> bot?.sendEntrySound()
             }
         }
     }
