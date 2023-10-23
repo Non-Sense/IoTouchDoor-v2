@@ -76,10 +76,16 @@ private fun openMagneticReader(path: String) {
 private fun init(environment: ApplicationEnvironment) {
     Database.connect(environment.config.property("database.path").getString(), "org.sqlite.JDBC")
     databaseInit()
+    var doorBell: RealDoorBell? = null
 
     if(!environment.config.property("gpio.mock").getString().toBoolean()) {
         DoorService.init(DoorByGpio(environment.config, environment))
-        DoorService.onActionCallback = { PhysicalLogService.add(it) }
+        DoorService.onActionCallback = {
+            runCatching {
+                PhysicalLogService.add(it)
+                doorBell?.changeBusLedState(false)
+            }
+        }
     }
 
     FelicaService.enabled = environment.config.property("feature.felica").getString().toBoolean()
@@ -96,20 +102,30 @@ private fun init(environment: ApplicationEnvironment) {
             channelId = environment.config.property("notifier.channelId").getString(),
             voiceChannelId = environment.config.property("notifier.voiceChannelId").getString(),
             audioPath = environment.config.property("notifier.audioPath").getString(),
-            entryAudioPath = environment.config.property("notifier.entryAudioPath").getString()
+            entryAudioPath = environment.config.property("notifier.entryAudioPath").getString(),
+            busAudioPath = environment.config.property("notifier.busAudioPath").getString(),
         ).apply {
             start()
         }
     }.getOrNull()
 
-    val doorBell = bot?.let {
+    doorBell = bot?.let {
         RealDoorBell(
-            port = environment.config.property("notifier.buttonPort").getString().toInt()
-        ) {
-            runCatching {
-                bot.sendNotify()
+            port = environment.config.property("notifier.buttonPort").getString().toInt(),
+            busButtonPort = environment.config.property("notifier.busButtonPort").getString().toInt(),
+            busLedPort = environment.config.property("notifier.busLedPort").getString().toInt(),
+            onBusButtonPushed = {
+                runCatching {
+                    doorBell?.changeBusLedState(true)
+                    bot.sendBusNotify()
+                }
+            },
+            onButtonPushed = {
+                runCatching {
+                    bot.sendNotify()
+                }
             }
-        }
+        )
     }
 
     RebootService(

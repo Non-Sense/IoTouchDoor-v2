@@ -99,7 +99,8 @@ class DiscordBot(
     private val channelId: String,
     private val voiceChannelId: String,
     private val audioPath: String,
-    private val entryAudioPath: String
+    private val entryAudioPath: String,
+    private val busAudioPath: String
 ) {
 
     private val logger = LoggerFactory.getLogger("DiscordBot")
@@ -110,6 +111,7 @@ class DiscordBot(
     private val audioPlayerSendHandler = AudioPlayerSendHandler(player)
     private var audioFileHandler: AudioFileHandler? = null
     private var entryAudioFileHandler: AudioFileHandler? = null
+    private var busAudioFileHandler: AudioFileHandler? = null
 
     companion object {
         private val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.SSS")
@@ -120,6 +122,7 @@ class DiscordBot(
         jda.awaitReady()
         audioFileHandler = AudioFileHandler(audioPath, playerManager)
         entryAudioFileHandler = AudioFileHandler(entryAudioPath, playerManager)
+        busAudioFileHandler = AudioFileHandler(busAudioPath, playerManager)
         CoroutineScope(Dispatchers.Default).launch {
             delay(3000)
             connectToVoiceChannel()
@@ -145,13 +148,25 @@ class DiscordBot(
         }
     }
 
+    fun sendBusNotify() {
+        logger.debug("bus notify")
+        busAudioFileHandler?.pickAudio()?.let {
+            player.stopTrack()
+            player.playTrack(it.makeClone())
+        }
+        sendNotifyText()
+    }
+
     fun sendNotify() {
         logger.debug("send notify")
         audioFileHandler?.pickAudio()?.let {
             player.stopTrack()
             player.playTrack(it.makeClone())
         }
+        sendNotifyText()
+    }
 
+    private fun sendNotifyText() {
         jda.getTextChannelById(channelId)?.apply {
             val time = LocalDateTime.now(ZoneId.of("Asia/Tokyo"))
             val formattedTime = formatter.format(time)
