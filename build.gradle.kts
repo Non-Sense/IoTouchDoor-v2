@@ -150,5 +150,8 @@ tasks.getByName<Jar>("jvmJar") {
 }
 
 val shadowJar = tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    from(file("./natives/linux-arm/libconnector.so")) {
+        into("natives/linux-arm/")
+    }
     mergeServiceFiles()
 }
