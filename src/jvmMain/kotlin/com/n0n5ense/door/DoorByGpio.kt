@@ -1,15 +1,13 @@
 package com.n0n5ense.door
 
 import com.pi4j.Pi4J
-import com.pi4j.io.gpio.digital.DigitalInputConfigBuilder
-import com.pi4j.io.gpio.digital.DigitalOutputConfigBuilder
-import com.pi4j.io.gpio.digital.DigitalState
-import com.pi4j.io.gpio.digital.DigitalStateChangeListener
+import com.pi4j.io.gpio.digital.*
 import com.pi4j.io.pwm.Pwm
 import com.pi4j.io.pwm.PwmType
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import kotlinx.coroutines.*
+import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.milliseconds
 
 class DoorByGpio(config: ApplicationConfig, private val environment: ApplicationEnvironment): Door(environment) {
@@ -18,6 +16,8 @@ class DoorByGpio(config: ApplicationConfig, private val environment: Application
         private const val EscapeModeForceExitTime = 5000
         private const val ForceUnlockTime = 2200
     }
+
+    private val logger = LoggerFactory.getLogger("DoorByGpio")
 
     private val servoPort = config.property("gpio.servoPort").getString().toInt()
     private val servoSensorPort = config.property("gpio.servoSenorPort").getString().toInt()
@@ -36,7 +36,7 @@ class DoorByGpio(config: ApplicationConfig, private val environment: Application
             .id("BCM$servoPort")
             .name("servo")
             .address(servoPort)
-            .pwmType(PwmType.HARDWARE)
+            .pwmType(PwmType.SOFTWARE)
             .initial(0)
             .shutdown(0)
             .frequency(50)
@@ -55,16 +55,19 @@ class DoorByGpio(config: ApplicationConfig, private val environment: Application
 
     private val servoSensor = pi4jContext.create(
         DigitalInputConfigBuilder.newInstance(pi4jContext)
+            .pull(PullResistance.PULL_UP)
             .address(servoSensorPort)
     )
 
     private val doorSensor = pi4jContext.create(
         DigitalInputConfigBuilder.newInstance(pi4jContext)
+            .pull(PullResistance.PULL_UP)
             .address(doorSensorPort)
     )
 
     private val unlockSwitch = pi4jContext.create(
         DigitalInputConfigBuilder.newInstance(pi4jContext)
+            .pull(PullResistance.PULL_UP)
             .address(unlockSwitchPort)
     )
 
@@ -144,11 +147,14 @@ class DoorByGpio(config: ApplicationConfig, private val environment: Application
 
     private fun moveServo(position: Number, offEnable: Boolean): Job =
         CoroutineScope(Dispatchers.Default).launch {
+            logger.info("servo $position")
             pwm.on(position)
             if(!offEnable)
                 return@launch
             delay(servoWaitTime.milliseconds)
-            pwm.off()
+            logger.info("servo off")
+            pwm.on(0)
+//            pwm.off()
         }
 
     override fun unlock() {

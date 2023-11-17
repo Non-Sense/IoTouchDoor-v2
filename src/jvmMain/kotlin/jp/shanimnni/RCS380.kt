@@ -100,14 +100,18 @@ class RCS380 {
     }
 
     companion object {
-        var VENDOR_ID = 0x054C
-        var PRODUCT_ID = 0x06C3
+        const val VENDOR_ID = 0x054C
+        const val PRODUCT_ID = 0x06C3
+
+        const val VENDOR_ID2 = 0x054C
+        const val PRODUCT_ID2 = 0x06C1
     }
 
     init {
         val services = UsbHostManager.getUsbServices()
         val rootHub = services.rootUsbHub
         val rcs380 = findDevice(rootHub, VENDOR_ID, PRODUCT_ID)
+            ?: findDevice(rootHub, VENDOR_ID2, PRODUCT_ID2)
             ?: throw DeviceNotFoundException("Felica Device Not Found")
         manufacturer = rcs380.manufacturerString
         productName = rcs380.productString
