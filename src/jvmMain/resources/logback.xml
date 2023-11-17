@@ -14,6 +14,7 @@
     <logger name="net.dv8tion.jda" level="ERROR" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
+    <logger name="Exposed" level="ERROR"/>
 <!--    <logger name="c.p.l.pigpio" level="ERROR"/>-->
 <!--    <logger name="c.p.p.impl" level="ERROR"/>-->
 </configuration>
