@@ -87,6 +87,7 @@ kotlin {
 
                 implementation("net.dv8tion:JDA:5.0.0-beta.12")
                 implementation("com.sedmelluq:lavaplayer:1.3.78")
+//                implementation("com.sedmelluq:lavaplayer-natives-extra:1.3.13")
 
                 implementation("org.usb4java:usb4java:1.3.0")
                 implementation("org.usb4java:usb4java-javax:1.3.0")
@@ -152,6 +153,9 @@ tasks.getByName<Jar>("jvmJar") {
 val shadowJar = tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     from(file("./natives/linux-arm/libconnector.so")) {
         into("natives/linux-arm/")
+    }
+    from(file("./natives/linux-aarch64/libconnector.so")) {
+        into("natives/linux-aarch64/")
     }
     mergeServiceFiles()
 }
