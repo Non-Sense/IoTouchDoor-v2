@@ -54,7 +54,10 @@ private fun openFelicaReader(environment: ApplicationEnvironment) {
             delay(1000)
         }
         FelicaService.onError = {
-            FelicaService.open()
+            launch {
+                delay(1000)
+                FelicaService.open()
+            }
         }
     }
 }

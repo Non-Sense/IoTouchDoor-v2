@@ -34,8 +34,11 @@ class FelicaReader {
     fun close() {
         job?.cancel()
         job = null
-        if(::reader.isInitialized)
-            reader.close()
+        if(::reader.isInitialized) {
+            kotlin.runCatching {
+                reader.close()
+            }
+        }
     }
 
     private fun preCommand() {

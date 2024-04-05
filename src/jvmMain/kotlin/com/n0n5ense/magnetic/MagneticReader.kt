@@ -71,9 +71,10 @@ class MagneticReader {
                         break
                     }
 
-                    @Suppress("BlockingMethodInNonBlockingContext")
                     val bytes = kotlin.runCatching {
-                        input?.readNBytes(16)?.reversed()
+                        val bytes = ByteArray(16)
+                        input?.read(bytes)
+                        bytes.reversed()
                     }.onFailure {
                         close()
                         onError(it)
