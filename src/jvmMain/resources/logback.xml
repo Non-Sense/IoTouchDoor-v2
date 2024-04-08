@@ -15,6 +15,7 @@
         <appender-ref ref="STDOUT"/>
     </logger>
     <logger name="Exposed" level="ERROR"/>
+    <logger name="io.ktor.auth.jwt" level="INFO"/>
 <!--    <logger name="c.p.l.pigpio" level="ERROR"/>-->
 <!--    <logger name="c.p.p.impl" level="ERROR"/>-->
 </configuration>

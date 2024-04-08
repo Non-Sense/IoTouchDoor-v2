@@ -11,10 +11,11 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 
 class TouchCardService {
     companion object {
-
+        private val logger = LoggerFactory.getLogger("TouchCardService")
         private fun fromEntity(entity: TouchCardEntity): TouchCard {
             return TouchCard(
                 entity.id.value,
@@ -45,6 +46,7 @@ class TouchCardService {
                     this.cardType = newTouchCard.cardId.type.name
                 }
             }
+            logger.info("added $newTouchCard")
         }
 
         fun get(id: Int): TouchCard? {

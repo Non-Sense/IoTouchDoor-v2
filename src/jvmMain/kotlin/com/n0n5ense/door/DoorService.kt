@@ -4,12 +4,15 @@ import com.n0n5ense.model.PhysicalLogAction
 import com.n0n5ense.persistence.TouchCardService
 import com.n0n5ense.persistence.TouchLogService
 import kotlinx.coroutines.*
+import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.minutes
 
 class DoorService {
     companion object {
         private var door: Door? = null
         var onActionCallback: ((PhysicalLogAction) -> Unit)? = null
+
+        private val logger = LoggerFactory.getLogger("DoorService")
 
         fun init(door: Door) {
             this.door = door
@@ -61,6 +64,7 @@ class DoorService {
             val cardId = CardId.determineType(id)
             val accept = TouchCardService.find(cardId)?.enabled == true
             TouchLogService.add(cardId, accept)
+            logger.info("touch: $id accept: $accept")
             if(accept)
                 unlock()
         }

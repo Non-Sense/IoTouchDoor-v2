@@ -2,17 +2,14 @@ package component
 
 import AuthUserContext
 import CardId
-import util.addCard
 import com.n0n5ense.model.json.EditTouchCard
 import com.n0n5ense.model.json.NewTouchCard
 import com.n0n5ense.model.json.TouchCard
 import csstype.number
 import csstype.px
+import csstype.vw
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import util.deleteCard
-import util.getCardCount
-import util.getCards
 import mui.icons.material.Add
 import mui.icons.material.Block
 import mui.icons.material.Check
@@ -24,7 +21,6 @@ import mui.system.Theme
 import mui.system.sx
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.url.URLSearchParams
-import util.putCard
 import react.*
 import react.css.css
 import react.dom.aria.ariaLabel
@@ -33,7 +29,7 @@ import react.dom.html.InputType
 import react.dom.html.ReactHTML.div
 import react.dom.onChange
 import react.router.useLocation
-import util.value
+import util.*
 
 private interface CardListRowProps : Props {
     var card: TouchCard
@@ -87,6 +83,7 @@ val CardList = FC<Props> {
     var editEnabled by useState(false)
     var editIsAddMode by useState(false)
     var editCardType by useState(CardIdType.Felica)
+    var snackbarOpen by useState(false)
 
     val isXsSize = useMediaQuery<Theme>(queryInput = {
         it.breakpoints.down(Breakpoint.sm)
@@ -133,6 +130,10 @@ val CardList = FC<Props> {
                     alertDialogOpen = false
                     updateCount {
                         updateCards()
+                    }
+                }.onFailure {
+                    if ((it as? NetException)?.code == 409) {
+                        snackbarOpen = true
                     }
                 }
             }
@@ -437,6 +438,21 @@ val CardList = FC<Props> {
             }
         }
 
+    }
+
+    Snackbar {
+        onClose = { _, _ ->
+            snackbarOpen = false
+        }
+        open = snackbarOpen
+        autoHideDuration = 2000
+        Alert {
+            severity = AlertColor.error
+            +"This card is already registered"
+        }
+        sx {
+            this.width = 100.vw
+        }
     }
 
 }

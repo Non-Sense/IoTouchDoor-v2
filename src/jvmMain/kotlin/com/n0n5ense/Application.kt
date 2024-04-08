@@ -64,14 +64,17 @@ private fun openFelicaReader(environment: ApplicationEnvironment) {
 
 private fun openMagneticReader(path: String) {
     CoroutineScope(Dispatchers.Default).launch {
+        MagneticReader.onError = {
+            launch {
+                delay(1000)
+                MagneticReader.open(path)
+            }
+        }
         while(true) {
             val result = MagneticReader.open(path)
             if(result.isSuccess)
                 break
             delay(1000)
-        }
-        MagneticReader.onError = {
-            MagneticReader.open(path)
         }
     }
 }

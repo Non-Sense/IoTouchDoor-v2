@@ -2,17 +2,16 @@ package com.n0n5ense.magnetic
 
 import com.n0n5ense.door.DoorService
 import com.n0n5ense.model.json.ReaderDeviceInfo
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import io.ktor.utils.io.streams.*
+import kotlinx.coroutines.*
+import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 
 private data class Event(
-    val time: Int,
-    val nano: Int,
+    val time: Long,
+    val nano: Long,
     val type: Short,
     val code: Short,
     val value: Int
@@ -20,6 +19,7 @@ private data class Event(
 
 class MagneticReader {
     companion object {
+        private val logger = LoggerFactory.getLogger("MagneticReader")
         private var input: BufferedInputStream? = null
         private var reader: MagReader? = null
         private var job: Job? = null
@@ -37,6 +37,7 @@ class MagneticReader {
                 reader?.onInputEnterCallback = Companion::onEnter
                 startJob()
             }.onFailure {
+                logger.error("error on open ${it.stackTraceToString()}")
                 close()
             }
         }
@@ -46,6 +47,7 @@ class MagneticReader {
         }
 
         fun close() {
+            logger.info("mag close")
             kotlin.runCatching {
                 input?.close()
             }
@@ -64,34 +66,48 @@ class MagneticReader {
 
         private fun startJob() {
             job = CoroutineScope(Dispatchers.Default).launch {
+                logger.info("mag job started")
                 while (true) {
                     if (reader == null || job == null || job?.isCancelled == true) {
-                        job?.cancel()
-                        job = null
                         break
+                    }
+                    val input = input
+                    if(input == null) {
+                        delay(100)
+                        continue
                     }
 
                     val bytes = kotlin.runCatching {
-                        val bytes = ByteArray(16)
-                        input?.read(bytes)
-                        bytes.reversed()
+                        val bb = ByteArray(24)
+                        repeat(24) {
+                            bb[it] = input.read().toByte()
+                        }
+                        bb.reversed()
                     }.onFailure {
+                        logger.error(it.stackTraceToString())
+                        job?.cancel()
+                        job = null
                         close()
                         onError(it)
-                    }.getOrNull() ?: continue
+                    }.getOrNull() ?: break
+
                     val event = Event(
-                        ByteBuffer.wrap(bytes.slice(12..15).toByteArray()).int,
-                        ByteBuffer.wrap(bytes.slice(8..11).toByteArray()).int,
+                        ByteBuffer.wrap(bytes.slice(16..23).toByteArray()).long,
+                        ByteBuffer.wrap(bytes.slice(8..15).toByteArray()).long,
                         ByteBuffer.wrap(bytes.slice(6..7).toByteArray()).short,
                         ByteBuffer.wrap(bytes.slice(4..5).toByteArray()).short,
                         ByteBuffer.wrap(bytes.slice(0..3).toByteArray()).int
                     )
                     reader?.addEvent(event)
                 }
+                job?.cancel()
+                job = null
+                close()
             }
         }
 
         private fun onEnter(id: String) {
+            logger.info("magID: $id")
             DoorService.addTouchLog(id)
             onTouch?.invoke(id)
         }
